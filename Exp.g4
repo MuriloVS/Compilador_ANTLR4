@@ -115,7 +115,7 @@ main:
             if (!used_table.Contains(s))
             {                
                 Console.Error.WriteLine("\nERROR - variable not used: '" + s + "'\n");             
-                //System.Environment.Exit(1);
+                ////System.Environment.Exit(1);
             }
         }        
 
@@ -156,12 +156,12 @@ st_print: PRINT OP_PAR
         } else if ($e1.type == 's') {
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", -2);        
         } else if ($e1.type == 'a') {            
-            Emit("invokevirtual Array/string()Ljava/lang/String;", -1);        
+            Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
         } else {
-            Emit("teste" + $e1.type, 0);
+            //Emit("teste" + $e1.type, 0);
             Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
-            //System.Environment.Exit(1);
+            ////System.Environment.Exit(1);
         }
     }    
     ( COMMA 
@@ -176,7 +176,7 @@ st_print: PRINT OP_PAR
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
         } else {
             Console.Error.WriteLine("\nERROR - Type error in 'e2'.\n");         
-            //System.Environment.Exit(1);
+            ////System.Environment.Exit(1);
         }
     }
     )*
@@ -226,7 +226,7 @@ st_break: BREAK
     {
         if (!inside_while) {
             Console.Error.WriteLine("\nERROR - Trying to use 'break' outside a loop.\n");         
-            System.Environment.Exit(1);
+            //System.Environment.Exit(1);
         }
         
         Emit("goto END_WHILE_" +  while_break_continue, 0);
@@ -236,7 +236,7 @@ st_continue: CONTINUE
     {
         if (!inside_while) {
             Console.Error.WriteLine("\nERROR - Trying to use 'continue' outside a loop.\n");         
-            System.Environment.Exit(1);
+            //System.Environment.Exit(1);
         }
 
         Emit("goto BEGIN_WHILE_" + while_break_continue, 0);
@@ -248,15 +248,15 @@ st_array_new: NAME ATTRIB OP_BRA CL_BRA
             symbol_table.Add($NAME.text);
             type_table.Add('a');
 
-            Emit("new Array", 0);
-            Emit("dup", 0);
-            Emit("invokespecial Array/<init>()V", 0);
+            Emit("new Array", 1);
+            Emit("dup", 1);
+            Emit("invokespecial Array/<init>()V", -1);
 
             int index = symbol_table.IndexOf($NAME.text);
             Emit("astore " + index + "\n", 1);            
         } else {
             Console.Error.WriteLine("\nERROR - Variable already exisis - 'st_array_new' expression.\n");         
-            System.Environment.Exit(1);
+            //System.Environment.Exit(1);
         }        
     };
 
@@ -264,7 +264,7 @@ st_array_push: NAME
     {   
         if (!symbol_table.Contains($NAME.text)) {
             Console.Error.WriteLine("\nERROR - Variable does not exist - 'st_array_push' expression.\n");         
-            System.Environment.Exit(1);
+            //System.Environment.Exit(1);
         }
 
         if (!used_table.Contains($NAME.text)) {
@@ -275,7 +275,7 @@ st_array_push: NAME
     }
     DOT PUSH OP_PAR expression 
     {   
-        Emit("invokevirtual Array/push(I)V\n", 1);        
+        Emit("invokevirtual Array/push(I)V\n", -2);        
     }
     CL_PAR;
     
@@ -289,10 +289,10 @@ st_array_set: NAME
     {
         if ($e1.type != 'i' || $e2.type != 'i') {
             Console.Error.WriteLine("\n# error: cannot mix types - array element assignement");         
-            System.Environment.Exit(1);
+            //System.Environment.Exit(1);
         }
 
-        Emit("invokevirtual Array/set(II)V\n", 1);        
+        Emit("invokevirtual Array/set(II)V\n", -3);        
     };
 
 st_attib: NAME ATTRIB expression
@@ -310,18 +310,18 @@ st_attib: NAME ATTRIB expression
                 Emit("istore " + index + "\n", -1);
             } else {
                 Console.Error.WriteLine("# error: " + $NAME.text + " is integer");
-                System.Environment.Exit(1);
+                //System.Environment.Exit(1);
             }            
         } else if (type == 's') {
             if ($expression.type == type) {
                 Emit("astore " + index + "\n", -1);
             } else {
                 Console.Error.WriteLine("# error: " + $NAME.text + " is string");
-                System.Environment.Exit(1);
+                //System.Environment.Exit(1);
             }             
         } else {
             Console.Error.WriteLine("\nERROR - Type error in 'st_attib' expression.\n");         
-            //System.Environment.Exit(1);
+            ////System.Environment.Exit(1);
         }        
     };
 
@@ -330,7 +330,7 @@ comparison: e1 = expression op = ( EQ | NE | GT | GE | LT | LE ) e2 = expression
     {
         if ($e1.type != 'i' || $e2.type  != 'i') {
             Console.Error.WriteLine("\n# error: cannot mix types - comparison");         
-            System.Environment.Exit(1);
+            //System.Environment.Exit(1);
         }
         if ($op.type == EQ) {            
             System.Console.Write("    if_icmpne ");          
@@ -351,7 +351,7 @@ expression returns [char type] : t1 = term ( op = ( PLUS | MINUS ) t2 = term
     {
         if ($t1.type != 'i' || $t2.type != 'i') {
             Console.Error.WriteLine("\n# error: cannot mix types - plus or minus");         
-            System.Environment.Exit(1);
+            ////System.Environment.Exit(1);
         }
         if ($op.type == PLUS ) {
             Emit("iadd", -1);
@@ -368,7 +368,7 @@ term returns [char type]: f1 = factor ( op = ( TIMES | OVER | REM ) f2 = factor
     {
         if ($f1.type != 'i' || $f2.type != 'i') {
             Console.Error.WriteLine("\n# error: cannot mix types - times, over or rem");         
-            System.Environment.Exit(1);
+            //System.Environment.Exit(1);
         }
         if ($op.type == TIMES ) {
             Emit("imul", -1);
@@ -383,7 +383,8 @@ term returns [char type]: f1 = factor ( op = ( TIMES | OVER | REM ) f2 = factor
         $type = $f1.type;
     };
 
-factor returns [char type]: NUMBER
+factor returns [char type]: 
+    NUMBER
     {
         Emit("ldc " + $NUMBER.text, 1);
         $type = 'i';
@@ -397,33 +398,11 @@ factor returns [char type]: NUMBER
     {
         $type = $expression.type;
     }
-    | READ_INT OP_PAR CL_PAR
-    {
-        Emit("invokestatic Runtime/readInt()I", 1);
-        $type = 'i';
-    }
-    | READ_STR OP_PAR CL_PAR
-    {
-        Emit("invokestatic Runtime/readString()Ljava/lang/String;", 1);        
-        $type = 's';
-    }
-    | NAME DOT LENGTH
-    {
-        int index = symbol_table.IndexOf($NAME.text); 
-        char type = 'i';
-        Emit("aload " + index, -1);
-        Emit("invokevirtual Array/length()I;", -1);        
-        Emit("invokevirtual java/io/PrintStream/print(i)V\n", 0);      
-    }
-    | NAME OP_BRA
-    {
-
-    }
     | NAME
     {
         if (!symbol_table.Contains($NAME.text)) {
             Console.Error.WriteLine("\nERROR - variable not found: '" + $NAME.text + "'\n");         
-            System.Environment.Exit(1);
+            //System.Environment.Exit(1);
         }       
 
         // vai auxiliar no controle das variáveis usadas        
@@ -445,18 +424,33 @@ factor returns [char type]: NUMBER
             $type = 'a';
         } else {
             Console.Error.WriteLine("\nERROR - Type error in factor NAME.\n");         
-            //System.Environment.Exit(1);
+            ////System.Environment.Exit(1);
         }       
+    }
+    | READ_INT OP_PAR CL_PAR
+    {
+        Emit("invokestatic Runtime/readInt()I", 1);
+        $type = 'i';
+    }
+    | READ_STR OP_PAR CL_PAR
+    {
+        Emit("invokestatic Runtime/readString()Ljava/lang/String;", 1);        
+        $type = 's';
+    }
+    | NAME DOT LENGTH
+    {
+        int index = symbol_table.IndexOf($NAME.text); 
+        char type = 'i';
+        Emit("aload " + index, -1);
+        Emit("invokevirtual Array/length()I", 0);        
+        Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0);      
+    }
+    | NAME OP_BRA expression CL_BRA
+    {
+        int index = symbol_table.IndexOf($NAME.text);
+        char type = type_table[index];
+        Emit("aload " + index, -1);
+        Emit("invokevirtual Array/get(I)I", -1);
+        Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0); 
     };
  
-/*
-factor: fa_number | fa_string | fa_string | fa_name | fa_read_int | fa_read_str
-fa_number: NUMBER
-fa_string: STRING
-fa_string: (expression)
-fa_name: name
-fa_read_int: read_int()
-fa_read_str: read_str()
-fa_array_length: name . length
-fa_array_get: name [ expression ]
- */

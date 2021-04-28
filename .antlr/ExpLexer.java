@@ -1,4 +1,4 @@
-// Generated from c:\Users\mvs_r\OneDrive\Documents\GitHub\3 - Compiladores\Exp.g4 by ANTLR 4.8
+// Generated from c:\Users\mvs_r\OneDrive\Documents\GitHub\3 - Compiladores\Compilador_ANTLR4\Exp.g4 by ANTLR 4.8
 
     #pragma warning disable 3021
 

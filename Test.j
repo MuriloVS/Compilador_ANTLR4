@@ -61,6 +61,42 @@
     ldc 999
     invokevirtual Array/set(II)V
 
+    aload 1
+    invokevirtual Array/length()I
+    invokevirtual java/io/PrintStream/print(I)V
+
+    ldc 1
+    isub
+
+    BEGIN_WHILE_1:
+
+    iload 2
+    ldc 0
+    if_icmplt END_WHILE_1
+    aload 1
+    iload 2
+    iload 2
+    aload 1
+    invokevirtual Array/get(I)I
+    invokevirtual java/io/PrintStream/print(I)V
+
+    iload 2
+    aload 1
+    invokevirtual Array/get(I)I
+    invokevirtual java/io/PrintStream/print(I)V
+
+    imul
+    invokevirtual Array/set(II)V
+
+    iload 2
+    ldc 1
+    isub
+    istore 2
+
+    goto BEGIN_WHILE_1
+
+    END_WHILE_1:
+
     getstatic java/lang/System/out Ljava/io/PrintStream;
     aload 1
     invokevirtual Array/string()Ljava/lang/String;
@@ -69,8 +105,16 @@
     getstatic java/lang/System/out Ljava/io/PrintStream;
     invokevirtual java/io/PrintStream/println()V
 
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    aload 1
+    invokevirtual Array/length()I
+    invokevirtual java/io/PrintStream/print(I)V
+
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    invokevirtual java/io/PrintStream/println()V
+
     return
-.limit stack 11
+.limit stack 7
 .limit locals 3
 .end method
 

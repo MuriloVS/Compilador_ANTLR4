@@ -1,4 +1,4 @@
-// Generated from c:\Users\mvs_r\OneDrive\Documents\GitHub\3 - Compiladores\Exp.g4 by ANTLR 4.8
+// Generated from c:\Users\mvs_r\OneDrive\Documents\GitHub\3 - Compiladores\Compilador_ANTLR4\Exp.g4 by ANTLR 4.8
 
     #pragma warning disable 3021
 
@@ -226,7 +226,7 @@ public class ExpParser extends Parser {
 			            if (!used_table.Contains(s))
 			            {                
 			                Console.Error.WriteLine("\nERROR - variable not used: '" + s + "'\n");             
-			                //System.Environment.Exit(1);
+			                ////System.Environment.Exit(1);
 			            }
 			        }        
 
@@ -425,12 +425,12 @@ public class ExpParser extends Parser {
 			        } else if (((St_printContext)_localctx).e1.type == 's') {
 			            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", -2);        
 			        } else if (((St_printContext)_localctx).e1.type == 'a') {            
-			            Emit("invokevirtual Array/string()Ljava/lang/String;", -1);        
+			            Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
 			            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
 			        } else {
-			            Emit("teste" + ((St_printContext)_localctx).e1.type, 0);
+			            //Emit("teste" + ((St_printContext)_localctx).e1.type, 0);
 			            Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
-			            //System.Environment.Exit(1);
+			            ////System.Environment.Exit(1);
 			        }
 			    
 			setState(66);
@@ -453,7 +453,7 @@ public class ExpParser extends Parser {
 				            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
 				        } else {
 				            Console.Error.WriteLine("\nERROR - Type error in 'e2'.\n");         
-				            //System.Environment.Exit(1);
+				            ////System.Environment.Exit(1);
 				        }
 				    
 				}
@@ -684,7 +684,7 @@ public class ExpParser extends Parser {
 
 			        if (!inside_while) {
 			            Console.Error.WriteLine("\nERROR - Trying to use 'break' outside a loop.\n");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 			        
 			        Emit("goto END_WHILE_" +  while_break_continue, 0);
@@ -721,7 +721,7 @@ public class ExpParser extends Parser {
 
 			        if (!inside_while) {
 			            Console.Error.WriteLine("\nERROR - Trying to use 'continue' outside a loop.\n");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 
 			        Emit("goto BEGIN_WHILE_" + while_break_continue, 0);
@@ -770,15 +770,15 @@ public class ExpParser extends Parser {
 			            symbol_table.Add((((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getText():null));
 			            type_table.Add('a');
 
-			            Emit("new Array", 0);
-			            Emit("dup", 0);
-			            Emit("invokespecial Array/<init>()V", 0);
+			            Emit("new Array", 1);
+			            Emit("dup", 1);
+			            Emit("invokespecial Array/<init>()V", -1);
 
 			            int index = symbol_table.IndexOf((((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getText():null));
 			            Emit("astore " + index + "\n", 1);            
 			        } else {
 			            Console.Error.WriteLine("\nERROR - Variable already exisis - 'st_array_new' expression.\n");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }        
 			    
 			}
@@ -821,7 +821,7 @@ public class ExpParser extends Parser {
 			   
 			        if (!symbol_table.Contains((((St_array_pushContext)_localctx).NAME!=null?((St_array_pushContext)_localctx).NAME.getText():null))) {
 			            Console.Error.WriteLine("\nERROR - Variable does not exist - 'st_array_push' expression.\n");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 
 			        if (!used_table.Contains((((St_array_pushContext)_localctx).NAME!=null?((St_array_pushContext)_localctx).NAME.getText():null))) {
@@ -839,7 +839,7 @@ public class ExpParser extends Parser {
 			setState(126);
 			expression();
 			   
-			        Emit("invokevirtual Array/push(I)V\n", 1);        
+			        Emit("invokevirtual Array/push(I)V\n", -2);        
 			    
 			setState(128);
 			match(CL_PAR);
@@ -901,10 +901,10 @@ public class ExpParser extends Parser {
 
 			        if (((St_array_setContext)_localctx).e1.type != 'i' || ((St_array_setContext)_localctx).e2.type != 'i') {
 			            Console.Error.WriteLine("\n# error: cannot mix types - array element assignement");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 
-			        Emit("invokevirtual Array/set(II)V\n", 1);        
+			        Emit("invokevirtual Array/set(II)V\n", -3);        
 			    
 			}
 		}
@@ -959,18 +959,18 @@ public class ExpParser extends Parser {
 			                Emit("istore " + index + "\n", -1);
 			            } else {
 			                Console.Error.WriteLine("# error: " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + " is integer");
-			                System.Environment.Exit(1);
+			                //System.Environment.Exit(1);
 			            }            
 			        } else if (type == 's') {
 			            if (((St_attibContext)_localctx).expression.type == type) {
 			                Emit("astore " + index + "\n", -1);
 			            } else {
 			                Console.Error.WriteLine("# error: " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + " is string");
-			                System.Environment.Exit(1);
+			                //System.Environment.Exit(1);
 			            }             
 			        } else {
 			            Console.Error.WriteLine("\nERROR - Type error in 'st_attib' expression.\n");         
-			            //System.Environment.Exit(1);
+			            ////System.Environment.Exit(1);
 			        }        
 			    
 			}
@@ -1033,7 +1033,7 @@ public class ExpParser extends Parser {
 
 			        if (((ComparisonContext)_localctx).e1.type != 'i' || ((ComparisonContext)_localctx).e2.type  != 'i') {
 			            Console.Error.WriteLine("\n# error: cannot mix types - comparison");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 			        if ((((ComparisonContext)_localctx).op!=null?((ComparisonContext)_localctx).op.getType():0) == EQ) {            
 			            System.Console.Write("    if_icmpne ");          
@@ -1118,7 +1118,7 @@ public class ExpParser extends Parser {
 
 				        if (((ExpressionContext)_localctx).t1.type != 'i' || ((ExpressionContext)_localctx).t2.type != 'i') {
 				            Console.Error.WriteLine("\n# error: cannot mix types - plus or minus");         
-				            System.Environment.Exit(1);
+				            ////System.Environment.Exit(1);
 				        }
 				        if ((((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getType():0) == PLUS ) {
 				            Emit("iadd", -1);
@@ -1208,7 +1208,7 @@ public class ExpParser extends Parser {
 
 				        if (((TermContext)_localctx).f1.type != 'i' || ((TermContext)_localctx).f2.type != 'i') {
 				            Console.Error.WriteLine("\n# error: cannot mix types - times, over or rem");         
-				            System.Environment.Exit(1);
+				            //System.Environment.Exit(1);
 				        }
 				        if ((((TermContext)_localctx).op!=null?((TermContext)_localctx).op.getType():0) == TIMES ) {
 				            Emit("imul", -1);
@@ -1253,12 +1253,13 @@ public class ExpParser extends Parser {
 			return getRuleContext(ExpressionContext.class,0);
 		}
 		public TerminalNode CL_PAR() { return getToken(ExpParser.CL_PAR, 0); }
+		public TerminalNode NAME() { return getToken(ExpParser.NAME, 0); }
 		public TerminalNode READ_INT() { return getToken(ExpParser.READ_INT, 0); }
 		public TerminalNode READ_STR() { return getToken(ExpParser.READ_STR, 0); }
-		public TerminalNode NAME() { return getToken(ExpParser.NAME, 0); }
 		public TerminalNode DOT() { return getToken(ExpParser.DOT, 0); }
 		public TerminalNode LENGTH() { return getToken(ExpParser.LENGTH, 0); }
 		public TerminalNode OP_BRA() { return getToken(ExpParser.OP_BRA, 0); }
+		public TerminalNode CL_BRA() { return getToken(ExpParser.CL_BRA, 0); }
 		public FactorContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1269,7 +1270,7 @@ public class ExpParser extends Parser {
 		FactorContext _localctx = new FactorContext(_ctx, getState());
 		enterRule(_localctx, 30, RULE_factor);
 		try {
-			setState(199);
+			setState(202);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,9,_ctx) ) {
 			case 1:
@@ -1312,71 +1313,11 @@ public class ExpParser extends Parser {
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(182);
-				match(READ_INT);
-				setState(183);
-				match(OP_PAR);
-				setState(184);
-				match(CL_PAR);
-
-				        Emit("invokestatic Runtime/readInt()I", 1);
-				        ((FactorContext)_localctx).type =  'i';
-				    
-				}
-				break;
-			case 5:
-				enterOuterAlt(_localctx, 5);
-				{
-				setState(186);
-				match(READ_STR);
-				setState(187);
-				match(OP_PAR);
-				setState(188);
-				match(CL_PAR);
-
-				        Emit("invokestatic Runtime/readString()Ljava/lang/String;", 1);        
-				        ((FactorContext)_localctx).type =  's';
-				    
-				}
-				break;
-			case 6:
-				enterOuterAlt(_localctx, 6);
-				{
-				setState(190);
-				((FactorContext)_localctx).NAME = match(NAME);
-				setState(191);
-				match(DOT);
-				setState(192);
-				match(LENGTH);
-
-				        int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null)); 
-				        char type = 'i';
-				        Emit("aload " + index, -1);
-				        Emit("invokevirtual Array/length()I;", -1);        
-				        Emit("invokevirtual java/io/PrintStream/print(i)V\n", 0);      
-				    
-				}
-				break;
-			case 7:
-				enterOuterAlt(_localctx, 7);
-				{
-				setState(194);
-				match(NAME);
-				setState(195);
-				match(OP_BRA);
-
-
-				    
-				}
-				break;
-			case 8:
-				enterOuterAlt(_localctx, 8);
-				{
-				setState(197);
 				((FactorContext)_localctx).NAME = match(NAME);
 
 				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
 				            Console.Error.WriteLine("\nERROR - variable not found: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "'\n");         
-				            System.Environment.Exit(1);
+				            //System.Environment.Exit(1);
 				        }       
 
 				        // vai auxiliar no controle das variáveis usadas        
@@ -1398,8 +1339,76 @@ public class ExpParser extends Parser {
 				            ((FactorContext)_localctx).type =  'a';
 				        } else {
 				            Console.Error.WriteLine("\nERROR - Type error in factor NAME.\n");         
-				            //System.Environment.Exit(1);
+				            ////System.Environment.Exit(1);
 				        }       
+				    
+				}
+				break;
+			case 5:
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(184);
+				match(READ_INT);
+				setState(185);
+				match(OP_PAR);
+				setState(186);
+				match(CL_PAR);
+
+				        Emit("invokestatic Runtime/readInt()I", 1);
+				        ((FactorContext)_localctx).type =  'i';
+				    
+				}
+				break;
+			case 6:
+				enterOuterAlt(_localctx, 6);
+				{
+				setState(188);
+				match(READ_STR);
+				setState(189);
+				match(OP_PAR);
+				setState(190);
+				match(CL_PAR);
+
+				        Emit("invokestatic Runtime/readString()Ljava/lang/String;", 1);        
+				        ((FactorContext)_localctx).type =  's';
+				    
+				}
+				break;
+			case 7:
+				enterOuterAlt(_localctx, 7);
+				{
+				setState(192);
+				((FactorContext)_localctx).NAME = match(NAME);
+				setState(193);
+				match(DOT);
+				setState(194);
+				match(LENGTH);
+
+				        int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null)); 
+				        char type = 'i';
+				        Emit("aload " + index, -1);
+				        Emit("invokevirtual Array/length()I", 0);        
+				        Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0);      
+				    
+				}
+				break;
+			case 8:
+				enterOuterAlt(_localctx, 8);
+				{
+				setState(196);
+				((FactorContext)_localctx).NAME = match(NAME);
+				setState(197);
+				match(OP_BRA);
+				setState(198);
+				expression();
+				setState(199);
+				match(CL_BRA);
+
+				        int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null));
+				        char type = type_table[index];
+				        Emit("aload " + index, -1);
+				        Emit("invokevirtual Array/get(I)I", -1);
+				        Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0); 
 				    
 				}
 				break;
@@ -1417,7 +1426,7 @@ public class ExpParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3%\u00cc\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3%\u00cf\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\3\2\3\2\3"+
 		"\2\3\3\3\3\6\3(\n\3\r\3\16\3)\3\3\3\3\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4"+
@@ -1431,53 +1440,54 @@ public class ExpParser extends Parser {
 		"\3\17\3\17\3\20\3\20\3\20\3\20\3\20\7\20\u00a9\n\20\f\20\16\20\u00ac\13"+
 		"\20\3\20\3\20\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3"+
 		"\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3"+
-		"\21\5\21\u00ca\n\21\3\21\2\2\22\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36"+
-		" \2\5\3\2\20\25\3\2\5\6\3\2\7\t\2\u00d2\2\"\3\2\2\2\4%\3\2\2\2\6\66\3"+
-		"\2\2\2\b8\3\2\2\2\nJ\3\2\2\2\fb\3\2\2\2\16o\3\2\2\2\20r\3\2\2\2\22u\3"+
-		"\2\2\2\24{\3\2\2\2\26\u0084\3\2\2\2\30\u008d\3\2\2\2\32\u0092\3\2\2\2"+
-		"\34\u0097\3\2\2\2\36\u00a3\3\2\2\2 \u00c9\3\2\2\2\"#\b\2\1\2#$\5\4\3\2"+
-		"$\3\3\2\2\2%\'\b\3\1\2&(\5\6\4\2\'&\3\2\2\2()\3\2\2\2)\'\3\2\2\2)*\3\2"+
-		"\2\2*+\3\2\2\2+,\b\3\1\2,\5\3\2\2\2-\67\5\b\5\2.\67\5\30\r\2/\67\5\n\6"+
-		"\2\60\67\5\f\7\2\61\67\5\16\b\2\62\67\5\20\t\2\63\67\5\22\n\2\64\67\5"+
-		"\24\13\2\65\67\5\26\f\2\66-\3\2\2\2\66.\3\2\2\2\66/\3\2\2\2\66\60\3\2"+
-		"\2\2\66\61\3\2\2\2\66\62\3\2\2\2\66\63\3\2\2\2\66\64\3\2\2\2\66\65\3\2"+
-		"\2\2\67\7\3\2\2\289\7\26\2\29:\7\n\2\2:;\b\5\1\2;<\5\34\17\2<D\b\5\1\2"+
-		"=>\7\r\2\2>?\b\5\1\2?@\5\34\17\2@A\b\5\1\2AC\3\2\2\2B=\3\2\2\2CF\3\2\2"+
-		"\2DB\3\2\2\2DE\3\2\2\2EG\3\2\2\2FD\3\2\2\2GH\7\13\2\2HI\b\5\1\2I\t\3\2"+
-		"\2\2JK\7\31\2\2KL\5\32\16\2LM\b\6\1\2MO\7\16\2\2NP\5\6\4\2ON\3\2\2\2P"+
-		"Q\3\2\2\2QO\3\2\2\2QR\3\2\2\2RS\3\2\2\2ST\7\17\2\2T^\b\6\1\2UV\7\32\2"+
-		"\2VX\7\16\2\2WY\5\6\4\2XW\3\2\2\2YZ\3\2\2\2ZX\3\2\2\2Z[\3\2\2\2[\\\3\2"+
-		"\2\2\\]\7\17\2\2]_\3\2\2\2^U\3\2\2\2^_\3\2\2\2_`\3\2\2\2`a\b\6\1\2a\13"+
-		"\3\2\2\2bc\7\33\2\2cd\b\7\1\2de\5\32\16\2ef\b\7\1\2fh\7\16\2\2gi\5\6\4"+
-		"\2hg\3\2\2\2ij\3\2\2\2jh\3\2\2\2jk\3\2\2\2kl\3\2\2\2lm\7\17\2\2mn\b\7"+
-		"\1\2n\r\3\2\2\2op\7\34\2\2pq\b\b\1\2q\17\3\2\2\2rs\7\35\2\2st\b\t\1\2"+
-		"t\21\3\2\2\2uv\7$\2\2vw\7\f\2\2wx\7 \2\2xy\7!\2\2yz\b\n\1\2z\23\3\2\2"+
-		"\2{|\7$\2\2|}\b\13\1\2}~\7\"\2\2~\177\7\36\2\2\177\u0080\7\n\2\2\u0080"+
-		"\u0081\5\34\17\2\u0081\u0082\b\13\1\2\u0082\u0083\7\13\2\2\u0083\25\3"+
-		"\2\2\2\u0084\u0085\7$\2\2\u0085\u0086\b\f\1\2\u0086\u0087\7 \2\2\u0087"+
-		"\u0088\5\34\17\2\u0088\u0089\7!\2\2\u0089\u008a\7\f\2\2\u008a\u008b\5"+
-		"\34\17\2\u008b\u008c\b\f\1\2\u008c\27\3\2\2\2\u008d\u008e\7$\2\2\u008e"+
-		"\u008f\7\f\2\2\u008f\u0090\5\34\17\2\u0090\u0091\b\r\1\2\u0091\31\3\2"+
-		"\2\2\u0092\u0093\5\34\17\2\u0093\u0094\t\2\2\2\u0094\u0095\5\34\17\2\u0095"+
-		"\u0096\b\16\1\2\u0096\33\3\2\2\2\u0097\u009e\5\36\20\2\u0098\u0099\t\3"+
-		"\2\2\u0099\u009a\5\36\20\2\u009a\u009b\b\17\1\2\u009b\u009d\3\2\2\2\u009c"+
-		"\u0098\3\2\2\2\u009d\u00a0\3\2\2\2\u009e\u009c\3\2\2\2\u009e\u009f\3\2"+
-		"\2\2\u009f\u00a1\3\2\2\2\u00a0\u009e\3\2\2\2\u00a1\u00a2\b\17\1\2\u00a2"+
-		"\35\3\2\2\2\u00a3\u00aa\5 \21\2\u00a4\u00a5\t\4\2\2\u00a5\u00a6\5 \21"+
-		"\2\u00a6\u00a7\b\20\1\2\u00a7\u00a9\3\2\2\2\u00a8\u00a4\3\2\2\2\u00a9"+
-		"\u00ac\3\2\2\2\u00aa\u00a8\3\2\2\2\u00aa\u00ab\3\2\2\2\u00ab\u00ad\3\2"+
-		"\2\2\u00ac\u00aa\3\2\2\2\u00ad\u00ae\b\20\1\2\u00ae\37\3\2\2\2\u00af\u00b0"+
-		"\7#\2\2\u00b0\u00ca\b\21\1\2\u00b1\u00b2\7%\2\2\u00b2\u00ca\b\21\1\2\u00b3"+
-		"\u00b4\7\n\2\2\u00b4\u00b5\5\34\17\2\u00b5\u00b6\7\13\2\2\u00b6\u00b7"+
-		"\b\21\1\2\u00b7\u00ca\3\2\2\2\u00b8\u00b9\7\27\2\2\u00b9\u00ba\7\n\2\2"+
-		"\u00ba\u00bb\7\13\2\2\u00bb\u00ca\b\21\1\2\u00bc\u00bd\7\30\2\2\u00bd"+
-		"\u00be\7\n\2\2\u00be\u00bf\7\13\2\2\u00bf\u00ca\b\21\1\2\u00c0\u00c1\7"+
-		"$\2\2\u00c1\u00c2\7\"\2\2\u00c2\u00c3\7\37\2\2\u00c3\u00ca\b\21\1\2\u00c4"+
-		"\u00c5\7$\2\2\u00c5\u00c6\7 \2\2\u00c6\u00ca\b\21\1\2\u00c7\u00c8\7$\2"+
-		"\2\u00c8\u00ca\b\21\1\2\u00c9\u00af\3\2\2\2\u00c9\u00b1\3\2\2\2\u00c9"+
-		"\u00b3\3\2\2\2\u00c9\u00b8\3\2\2\2\u00c9\u00bc\3\2\2\2\u00c9\u00c0\3\2"+
-		"\2\2\u00c9\u00c4\3\2\2\2\u00c9\u00c7\3\2\2\2\u00ca!\3\2\2\2\f)\66DQZ^"+
-		"j\u009e\u00aa\u00c9";
+		"\21\3\21\3\21\3\21\5\21\u00cd\n\21\3\21\2\2\22\2\4\6\b\n\f\16\20\22\24"+
+		"\26\30\32\34\36 \2\5\3\2\20\25\3\2\5\6\3\2\7\t\2\u00d5\2\"\3\2\2\2\4%"+
+		"\3\2\2\2\6\66\3\2\2\2\b8\3\2\2\2\nJ\3\2\2\2\fb\3\2\2\2\16o\3\2\2\2\20"+
+		"r\3\2\2\2\22u\3\2\2\2\24{\3\2\2\2\26\u0084\3\2\2\2\30\u008d\3\2\2\2\32"+
+		"\u0092\3\2\2\2\34\u0097\3\2\2\2\36\u00a3\3\2\2\2 \u00cc\3\2\2\2\"#\b\2"+
+		"\1\2#$\5\4\3\2$\3\3\2\2\2%\'\b\3\1\2&(\5\6\4\2\'&\3\2\2\2()\3\2\2\2)\'"+
+		"\3\2\2\2)*\3\2\2\2*+\3\2\2\2+,\b\3\1\2,\5\3\2\2\2-\67\5\b\5\2.\67\5\30"+
+		"\r\2/\67\5\n\6\2\60\67\5\f\7\2\61\67\5\16\b\2\62\67\5\20\t\2\63\67\5\22"+
+		"\n\2\64\67\5\24\13\2\65\67\5\26\f\2\66-\3\2\2\2\66.\3\2\2\2\66/\3\2\2"+
+		"\2\66\60\3\2\2\2\66\61\3\2\2\2\66\62\3\2\2\2\66\63\3\2\2\2\66\64\3\2\2"+
+		"\2\66\65\3\2\2\2\67\7\3\2\2\289\7\26\2\29:\7\n\2\2:;\b\5\1\2;<\5\34\17"+
+		"\2<D\b\5\1\2=>\7\r\2\2>?\b\5\1\2?@\5\34\17\2@A\b\5\1\2AC\3\2\2\2B=\3\2"+
+		"\2\2CF\3\2\2\2DB\3\2\2\2DE\3\2\2\2EG\3\2\2\2FD\3\2\2\2GH\7\13\2\2HI\b"+
+		"\5\1\2I\t\3\2\2\2JK\7\31\2\2KL\5\32\16\2LM\b\6\1\2MO\7\16\2\2NP\5\6\4"+
+		"\2ON\3\2\2\2PQ\3\2\2\2QO\3\2\2\2QR\3\2\2\2RS\3\2\2\2ST\7\17\2\2T^\b\6"+
+		"\1\2UV\7\32\2\2VX\7\16\2\2WY\5\6\4\2XW\3\2\2\2YZ\3\2\2\2ZX\3\2\2\2Z[\3"+
+		"\2\2\2[\\\3\2\2\2\\]\7\17\2\2]_\3\2\2\2^U\3\2\2\2^_\3\2\2\2_`\3\2\2\2"+
+		"`a\b\6\1\2a\13\3\2\2\2bc\7\33\2\2cd\b\7\1\2de\5\32\16\2ef\b\7\1\2fh\7"+
+		"\16\2\2gi\5\6\4\2hg\3\2\2\2ij\3\2\2\2jh\3\2\2\2jk\3\2\2\2kl\3\2\2\2lm"+
+		"\7\17\2\2mn\b\7\1\2n\r\3\2\2\2op\7\34\2\2pq\b\b\1\2q\17\3\2\2\2rs\7\35"+
+		"\2\2st\b\t\1\2t\21\3\2\2\2uv\7$\2\2vw\7\f\2\2wx\7 \2\2xy\7!\2\2yz\b\n"+
+		"\1\2z\23\3\2\2\2{|\7$\2\2|}\b\13\1\2}~\7\"\2\2~\177\7\36\2\2\177\u0080"+
+		"\7\n\2\2\u0080\u0081\5\34\17\2\u0081\u0082\b\13\1\2\u0082\u0083\7\13\2"+
+		"\2\u0083\25\3\2\2\2\u0084\u0085\7$\2\2\u0085\u0086\b\f\1\2\u0086\u0087"+
+		"\7 \2\2\u0087\u0088\5\34\17\2\u0088\u0089\7!\2\2\u0089\u008a\7\f\2\2\u008a"+
+		"\u008b\5\34\17\2\u008b\u008c\b\f\1\2\u008c\27\3\2\2\2\u008d\u008e\7$\2"+
+		"\2\u008e\u008f\7\f\2\2\u008f\u0090\5\34\17\2\u0090\u0091\b\r\1\2\u0091"+
+		"\31\3\2\2\2\u0092\u0093\5\34\17\2\u0093\u0094\t\2\2\2\u0094\u0095\5\34"+
+		"\17\2\u0095\u0096\b\16\1\2\u0096\33\3\2\2\2\u0097\u009e\5\36\20\2\u0098"+
+		"\u0099\t\3\2\2\u0099\u009a\5\36\20\2\u009a\u009b\b\17\1\2\u009b\u009d"+
+		"\3\2\2\2\u009c\u0098\3\2\2\2\u009d\u00a0\3\2\2\2\u009e\u009c\3\2\2\2\u009e"+
+		"\u009f\3\2\2\2\u009f\u00a1\3\2\2\2\u00a0\u009e\3\2\2\2\u00a1\u00a2\b\17"+
+		"\1\2\u00a2\35\3\2\2\2\u00a3\u00aa\5 \21\2\u00a4\u00a5\t\4\2\2\u00a5\u00a6"+
+		"\5 \21\2\u00a6\u00a7\b\20\1\2\u00a7\u00a9\3\2\2\2\u00a8\u00a4\3\2\2\2"+
+		"\u00a9\u00ac\3\2\2\2\u00aa\u00a8\3\2\2\2\u00aa\u00ab\3\2\2\2\u00ab\u00ad"+
+		"\3\2\2\2\u00ac\u00aa\3\2\2\2\u00ad\u00ae\b\20\1\2\u00ae\37\3\2\2\2\u00af"+
+		"\u00b0\7#\2\2\u00b0\u00cd\b\21\1\2\u00b1\u00b2\7%\2\2\u00b2\u00cd\b\21"+
+		"\1\2\u00b3\u00b4\7\n\2\2\u00b4\u00b5\5\34\17\2\u00b5\u00b6\7\13\2\2\u00b6"+
+		"\u00b7\b\21\1\2\u00b7\u00cd\3\2\2\2\u00b8\u00b9\7$\2\2\u00b9\u00cd\b\21"+
+		"\1\2\u00ba\u00bb\7\27\2\2\u00bb\u00bc\7\n\2\2\u00bc\u00bd\7\13\2\2\u00bd"+
+		"\u00cd\b\21\1\2\u00be\u00bf\7\30\2\2\u00bf\u00c0\7\n\2\2\u00c0\u00c1\7"+
+		"\13\2\2\u00c1\u00cd\b\21\1\2\u00c2\u00c3\7$\2\2\u00c3\u00c4\7\"\2\2\u00c4"+
+		"\u00c5\7\37\2\2\u00c5\u00cd\b\21\1\2\u00c6\u00c7\7$\2\2\u00c7\u00c8\7"+
+		" \2\2\u00c8\u00c9\5\34\17\2\u00c9\u00ca\7!\2\2\u00ca\u00cb\b\21\1\2\u00cb"+
+		"\u00cd\3\2\2\2\u00cc\u00af\3\2\2\2\u00cc\u00b1\3\2\2\2\u00cc\u00b3\3\2"+
+		"\2\2\u00cc\u00b8\3\2\2\2\u00cc\u00ba\3\2\2\2\u00cc\u00be\3\2\2\2\u00cc"+
+		"\u00c2\3\2\2\2\u00cc\u00c6\3\2\2\2\u00cd!\3\2\2\2\f)\66DQZ^j\u009e\u00aa"+
+		"\u00cc";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

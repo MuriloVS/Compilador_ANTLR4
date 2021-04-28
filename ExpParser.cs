@@ -223,7 +223,7 @@ public partial class ExpParser : Parser {
 			            if (!used_table.Contains(s))
 			            {                
 			                Console.Error.WriteLine("\nERROR - variable not used: '" + s + "'\n");             
-			                //System.Environment.Exit(1);
+			                ////System.Environment.Exit(1);
 			            }
 			        }        
 
@@ -426,12 +426,12 @@ public partial class ExpParser : Parser {
 			        } else if (_localctx.e1.type == 's') {
 			            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", -2);        
 			        } else if (_localctx.e1.type == 'a') {            
-			            Emit("invokevirtual Array/string()Ljava/lang/String;", -1);        
+			            Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
 			            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
 			        } else {
-			            Emit("teste" + _localctx.e1.type, 0);
+			            //Emit("teste" + _localctx.e1.type, 0);
 			            Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
-			            //System.Environment.Exit(1);
+			            ////System.Environment.Exit(1);
 			        }
 			    
 			State = 66;
@@ -454,7 +454,7 @@ public partial class ExpParser : Parser {
 				            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
 				        } else {
 				            Console.Error.WriteLine("\nERROR - Type error in 'e2'.\n");         
-				            //System.Environment.Exit(1);
+				            ////System.Environment.Exit(1);
 				        }
 				    
 				}
@@ -691,7 +691,7 @@ public partial class ExpParser : Parser {
 
 			        if (!inside_while) {
 			            Console.Error.WriteLine("\nERROR - Trying to use 'break' outside a loop.\n");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 			        
 			        Emit("goto END_WHILE_" +  while_break_continue, 0);
@@ -730,7 +730,7 @@ public partial class ExpParser : Parser {
 
 			        if (!inside_while) {
 			            Console.Error.WriteLine("\nERROR - Trying to use 'continue' outside a loop.\n");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 
 			        Emit("goto BEGIN_WHILE_" + while_break_continue, 0);
@@ -781,15 +781,15 @@ public partial class ExpParser : Parser {
 			            symbol_table.Add((_localctx._NAME!=null?_localctx._NAME.Text:null));
 			            type_table.Add('a');
 
-			            Emit("new Array", 0);
-			            Emit("dup", 0);
-			            Emit("invokespecial Array/<init>()V", 0);
+			            Emit("new Array", 1);
+			            Emit("dup", 1);
+			            Emit("invokespecial Array/<init>()V", -1);
 
 			            int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
 			            Emit("astore " + index + "\n", 1);            
 			        } else {
 			            Console.Error.WriteLine("\nERROR - Variable already exisis - 'st_array_new' expression.\n");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }        
 			    
 			}
@@ -834,7 +834,7 @@ public partial class ExpParser : Parser {
 			   
 			        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
 			            Console.Error.WriteLine("\nERROR - Variable does not exist - 'st_array_push' expression.\n");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 
 			        if (!used_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
@@ -852,7 +852,7 @@ public partial class ExpParser : Parser {
 			State = 126;
 			expression();
 			   
-			        Emit("invokevirtual Array/push(I)V\n", 1);        
+			        Emit("invokevirtual Array/push(I)V\n", -2);        
 			    
 			State = 128;
 			Match(CL_PAR);
@@ -916,10 +916,10 @@ public partial class ExpParser : Parser {
 
 			        if (_localctx.e1.type != 'i' || _localctx.e2.type != 'i') {
 			            Console.Error.WriteLine("\n# error: cannot mix types - array element assignement");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 
-			        Emit("invokevirtual Array/set(II)V\n", 1);        
+			        Emit("invokevirtual Array/set(II)V\n", -3);        
 			    
 			}
 		}
@@ -976,18 +976,18 @@ public partial class ExpParser : Parser {
 			                Emit("istore " + index + "\n", -1);
 			            } else {
 			                Console.Error.WriteLine("# error: " + (_localctx._NAME!=null?_localctx._NAME.Text:null) + " is integer");
-			                System.Environment.Exit(1);
+			                //System.Environment.Exit(1);
 			            }            
 			        } else if (type == 's') {
 			            if (_localctx._expression.type == type) {
 			                Emit("astore " + index + "\n", -1);
 			            } else {
 			                Console.Error.WriteLine("# error: " + (_localctx._NAME!=null?_localctx._NAME.Text:null) + " is string");
-			                System.Environment.Exit(1);
+			                //System.Environment.Exit(1);
 			            }             
 			        } else {
 			            Console.Error.WriteLine("\nERROR - Type error in 'st_attib' expression.\n");         
-			            //System.Environment.Exit(1);
+			            ////System.Environment.Exit(1);
 			        }        
 			    
 			}
@@ -1051,7 +1051,7 @@ public partial class ExpParser : Parser {
 
 			        if (_localctx.e1.type != 'i' || _localctx.e2.type  != 'i') {
 			            Console.Error.WriteLine("\n# error: cannot mix types - comparison");         
-			            System.Environment.Exit(1);
+			            //System.Environment.Exit(1);
 			        }
 			        if ((_localctx.op!=null?_localctx.op.Type:0) == EQ) {            
 			            System.Console.Write("    if_icmpne ");          
@@ -1137,7 +1137,7 @@ public partial class ExpParser : Parser {
 
 				        if (_localctx.t1.type != 'i' || _localctx.t2.type != 'i') {
 				            Console.Error.WriteLine("\n# error: cannot mix types - plus or minus");         
-				            System.Environment.Exit(1);
+				            ////System.Environment.Exit(1);
 				        }
 				        if ((_localctx.op!=null?_localctx.op.Type:0) == PLUS ) {
 				            Emit("iadd", -1);
@@ -1228,7 +1228,7 @@ public partial class ExpParser : Parser {
 
 				        if (_localctx.f1.type != 'i' || _localctx.f2.type != 'i') {
 				            Console.Error.WriteLine("\n# error: cannot mix types - times, over or rem");         
-				            System.Environment.Exit(1);
+				            //System.Environment.Exit(1);
 				        }
 				        if ((_localctx.op!=null?_localctx.op.Type:0) == TIMES ) {
 				            Emit("imul", -1);
@@ -1273,11 +1273,13 @@ public partial class ExpParser : Parser {
 			return GetRuleContext<ExpressionContext>(0);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CL_PAR() { return GetToken(ExpParser.CL_PAR, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NAME() { return GetToken(ExpParser.NAME, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode READ_INT() { return GetToken(ExpParser.READ_INT, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode READ_STR() { return GetToken(ExpParser.READ_STR, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NAME() { return GetToken(ExpParser.NAME, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DOT() { return GetToken(ExpParser.DOT, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LENGTH() { return GetToken(ExpParser.LENGTH, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode OP_BRA() { return GetToken(ExpParser.OP_BRA, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CL_BRA() { return GetToken(ExpParser.CL_BRA, 0); }
 		public FactorContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
@@ -1290,7 +1292,7 @@ public partial class ExpParser : Parser {
 		FactorContext _localctx = new FactorContext(Context, State);
 		EnterRule(_localctx, 30, RULE_factor);
 		try {
-			State = 196;
+			State = 202;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,9,Context) ) {
 			case 1:
@@ -1333,59 +1335,11 @@ public partial class ExpParser : Parser {
 				EnterOuterAlt(_localctx, 4);
 				{
 				State = 182;
-				Match(READ_INT);
-				State = 183;
-				Match(OP_PAR);
-				State = 184;
-				Match(CL_PAR);
-
-				        Emit("invokestatic Runtime/readInt()I", 1);
-				        _localctx.type =  'i';
-				    
-				}
-				break;
-			case 5:
-				EnterOuterAlt(_localctx, 5);
-				{
-				State = 186;
-				Match(READ_STR);
-				State = 187;
-				Match(OP_PAR);
-				State = 188;
-				Match(CL_PAR);
-
-				        Emit("invokestatic Runtime/readString()Ljava/lang/String;", 1);        
-				        _localctx.type =  's';
-				    
-				}
-				break;
-			case 6:
-				EnterOuterAlt(_localctx, 6);
-				{
-				State = 190;
-				_localctx._NAME = Match(NAME);
-				State = 191;
-				Match(DOT);
-				State = 192;
-				Match(LENGTH);
-
-				        int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null)); 
-				        char type = 'i';
-				        Emit("aload " + index, -1);
-				        Emit("invokevirtual Array/length()I;", -1);        
-				        Emit("invokevirtual java/io/PrintStream/print(i)V\n", 0);      
-				    
-				}
-				break;
-			case 7:
-				EnterOuterAlt(_localctx, 7);
-				{
-				State = 194;
 				_localctx._NAME = Match(NAME);
 
 				        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
 				            Console.Error.WriteLine("\nERROR - variable not found: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "'\n");         
-				            System.Environment.Exit(1);
+				            //System.Environment.Exit(1);
 				        }       
 
 				        // vai auxiliar no controle das variáveis usadas        
@@ -1407,8 +1361,76 @@ public partial class ExpParser : Parser {
 				            _localctx.type =  'a';
 				        } else {
 				            Console.Error.WriteLine("\nERROR - Type error in factor NAME.\n");         
-				            //System.Environment.Exit(1);
+				            ////System.Environment.Exit(1);
 				        }       
+				    
+				}
+				break;
+			case 5:
+				EnterOuterAlt(_localctx, 5);
+				{
+				State = 184;
+				Match(READ_INT);
+				State = 185;
+				Match(OP_PAR);
+				State = 186;
+				Match(CL_PAR);
+
+				        Emit("invokestatic Runtime/readInt()I", 1);
+				        _localctx.type =  'i';
+				    
+				}
+				break;
+			case 6:
+				EnterOuterAlt(_localctx, 6);
+				{
+				State = 188;
+				Match(READ_STR);
+				State = 189;
+				Match(OP_PAR);
+				State = 190;
+				Match(CL_PAR);
+
+				        Emit("invokestatic Runtime/readString()Ljava/lang/String;", 1);        
+				        _localctx.type =  's';
+				    
+				}
+				break;
+			case 7:
+				EnterOuterAlt(_localctx, 7);
+				{
+				State = 192;
+				_localctx._NAME = Match(NAME);
+				State = 193;
+				Match(DOT);
+				State = 194;
+				Match(LENGTH);
+
+				        int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null)); 
+				        char type = 'i';
+				        Emit("aload " + index, -1);
+				        Emit("invokevirtual Array/length()I", 0);        
+				        Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0);      
+				    
+				}
+				break;
+			case 8:
+				EnterOuterAlt(_localctx, 8);
+				{
+				State = 196;
+				_localctx._NAME = Match(NAME);
+				State = 197;
+				Match(OP_BRA);
+				State = 198;
+				expression();
+				State = 199;
+				Match(CL_BRA);
+
+				        int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
+				        char type = type_table[index];
+				        Emit("aload " + index, -1);
+				        Emit("invokevirtual Array/get(I)I", -1);
+				        Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0); 
 				    
 				}
 				break;
@@ -1427,7 +1449,7 @@ public partial class ExpParser : Parser {
 
 	private static char[] _serializedATN = {
 		'\x3', '\x608B', '\xA72A', '\x8133', '\xB9ED', '\x417C', '\x3BE7', '\x7786', 
-		'\x5964', '\x3', '%', '\xC9', '\x4', '\x2', '\t', '\x2', '\x4', '\x3', 
+		'\x5964', '\x3', '%', '\xCF', '\x4', '\x2', '\t', '\x2', '\x4', '\x3', 
 		'\t', '\x3', '\x4', '\x4', '\t', '\x4', '\x4', '\x5', '\t', '\x5', '\x4', 
 		'\x6', '\t', '\x6', '\x4', '\a', '\t', '\a', '\x4', '\b', '\t', '\b', 
 		'\x4', '\t', '\t', '\t', '\x4', '\n', '\t', '\n', '\x4', '\v', '\t', '\v', 
@@ -1465,26 +1487,27 @@ public partial class ExpParser : Parser {
 		'\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', 
 		'\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', 
 		'\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', 
-		'\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x5', '\x11', '\xC7', 
-		'\n', '\x11', '\x3', '\x11', '\x2', '\x2', '\x12', '\x2', '\x4', '\x6', 
-		'\b', '\n', '\f', '\xE', '\x10', '\x12', '\x14', '\x16', '\x18', '\x1A', 
-		'\x1C', '\x1E', ' ', '\x2', '\x5', '\x3', '\x2', '\x10', '\x15', '\x3', 
-		'\x2', '\x5', '\x6', '\x3', '\x2', '\a', '\t', '\x2', '\xCE', '\x2', '\"', 
-		'\x3', '\x2', '\x2', '\x2', '\x4', '%', '\x3', '\x2', '\x2', '\x2', '\x6', 
-		'\x36', '\x3', '\x2', '\x2', '\x2', '\b', '\x38', '\x3', '\x2', '\x2', 
-		'\x2', '\n', 'J', '\x3', '\x2', '\x2', '\x2', '\f', '\x62', '\x3', '\x2', 
-		'\x2', '\x2', '\xE', 'o', '\x3', '\x2', '\x2', '\x2', '\x10', 'r', '\x3', 
-		'\x2', '\x2', '\x2', '\x12', 'u', '\x3', '\x2', '\x2', '\x2', '\x14', 
-		'{', '\x3', '\x2', '\x2', '\x2', '\x16', '\x84', '\x3', '\x2', '\x2', 
-		'\x2', '\x18', '\x8D', '\x3', '\x2', '\x2', '\x2', '\x1A', '\x92', '\x3', 
-		'\x2', '\x2', '\x2', '\x1C', '\x97', '\x3', '\x2', '\x2', '\x2', '\x1E', 
-		'\xA3', '\x3', '\x2', '\x2', '\x2', ' ', '\xC6', '\x3', '\x2', '\x2', 
-		'\x2', '\"', '#', '\b', '\x2', '\x1', '\x2', '#', '$', '\x5', '\x4', '\x3', 
-		'\x2', '$', '\x3', '\x3', '\x2', '\x2', '\x2', '%', '\'', '\b', '\x3', 
-		'\x1', '\x2', '&', '(', '\x5', '\x6', '\x4', '\x2', '\'', '&', '\x3', 
-		'\x2', '\x2', '\x2', '(', ')', '\x3', '\x2', '\x2', '\x2', ')', '\'', 
-		'\x3', '\x2', '\x2', '\x2', ')', '*', '\x3', '\x2', '\x2', '\x2', '*', 
-		'+', '\x3', '\x2', '\x2', '\x2', '+', ',', '\b', '\x3', '\x1', '\x2', 
+		'\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', 
+		'\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x3', '\x11', '\x5', 
+		'\x11', '\xCD', '\n', '\x11', '\x3', '\x11', '\x2', '\x2', '\x12', '\x2', 
+		'\x4', '\x6', '\b', '\n', '\f', '\xE', '\x10', '\x12', '\x14', '\x16', 
+		'\x18', '\x1A', '\x1C', '\x1E', ' ', '\x2', '\x5', '\x3', '\x2', '\x10', 
+		'\x15', '\x3', '\x2', '\x5', '\x6', '\x3', '\x2', '\a', '\t', '\x2', '\xD5', 
+		'\x2', '\"', '\x3', '\x2', '\x2', '\x2', '\x4', '%', '\x3', '\x2', '\x2', 
+		'\x2', '\x6', '\x36', '\x3', '\x2', '\x2', '\x2', '\b', '\x38', '\x3', 
+		'\x2', '\x2', '\x2', '\n', 'J', '\x3', '\x2', '\x2', '\x2', '\f', '\x62', 
+		'\x3', '\x2', '\x2', '\x2', '\xE', 'o', '\x3', '\x2', '\x2', '\x2', '\x10', 
+		'r', '\x3', '\x2', '\x2', '\x2', '\x12', 'u', '\x3', '\x2', '\x2', '\x2', 
+		'\x14', '{', '\x3', '\x2', '\x2', '\x2', '\x16', '\x84', '\x3', '\x2', 
+		'\x2', '\x2', '\x18', '\x8D', '\x3', '\x2', '\x2', '\x2', '\x1A', '\x92', 
+		'\x3', '\x2', '\x2', '\x2', '\x1C', '\x97', '\x3', '\x2', '\x2', '\x2', 
+		'\x1E', '\xA3', '\x3', '\x2', '\x2', '\x2', ' ', '\xCC', '\x3', '\x2', 
+		'\x2', '\x2', '\"', '#', '\b', '\x2', '\x1', '\x2', '#', '$', '\x5', '\x4', 
+		'\x3', '\x2', '$', '\x3', '\x3', '\x2', '\x2', '\x2', '%', '\'', '\b', 
+		'\x3', '\x1', '\x2', '&', '(', '\x5', '\x6', '\x4', '\x2', '\'', '&', 
+		'\x3', '\x2', '\x2', '\x2', '(', ')', '\x3', '\x2', '\x2', '\x2', ')', 
+		'\'', '\x3', '\x2', '\x2', '\x2', ')', '*', '\x3', '\x2', '\x2', '\x2', 
+		'*', '+', '\x3', '\x2', '\x2', '\x2', '+', ',', '\b', '\x3', '\x1', '\x2', 
 		',', '\x5', '\x3', '\x2', '\x2', '\x2', '-', '\x37', '\x5', '\b', '\x5', 
 		'\x2', '.', '\x37', '\x5', '\x18', '\r', '\x2', '/', '\x37', '\x5', '\n', 
 		'\x6', '\x2', '\x30', '\x37', '\x5', '\f', '\a', '\x2', '\x31', '\x37', 
@@ -1567,25 +1590,29 @@ public partial class ExpParser : Parser {
 		'\xAB', '\xAD', '\x3', '\x2', '\x2', '\x2', '\xAC', '\xAA', '\x3', '\x2', 
 		'\x2', '\x2', '\xAD', '\xAE', '\b', '\x10', '\x1', '\x2', '\xAE', '\x1F', 
 		'\x3', '\x2', '\x2', '\x2', '\xAF', '\xB0', '\a', '#', '\x2', '\x2', '\xB0', 
-		'\xC7', '\b', '\x11', '\x1', '\x2', '\xB1', '\xB2', '\a', '%', '\x2', 
-		'\x2', '\xB2', '\xC7', '\b', '\x11', '\x1', '\x2', '\xB3', '\xB4', '\a', 
+		'\xCD', '\b', '\x11', '\x1', '\x2', '\xB1', '\xB2', '\a', '%', '\x2', 
+		'\x2', '\xB2', '\xCD', '\b', '\x11', '\x1', '\x2', '\xB3', '\xB4', '\a', 
 		'\n', '\x2', '\x2', '\xB4', '\xB5', '\x5', '\x1C', '\xF', '\x2', '\xB5', 
 		'\xB6', '\a', '\v', '\x2', '\x2', '\xB6', '\xB7', '\b', '\x11', '\x1', 
-		'\x2', '\xB7', '\xC7', '\x3', '\x2', '\x2', '\x2', '\xB8', '\xB9', '\a', 
-		'\x17', '\x2', '\x2', '\xB9', '\xBA', '\a', '\n', '\x2', '\x2', '\xBA', 
-		'\xBB', '\a', '\v', '\x2', '\x2', '\xBB', '\xC7', '\b', '\x11', '\x1', 
-		'\x2', '\xBC', '\xBD', '\a', '\x18', '\x2', '\x2', '\xBD', '\xBE', '\a', 
-		'\n', '\x2', '\x2', '\xBE', '\xBF', '\a', '\v', '\x2', '\x2', '\xBF', 
-		'\xC7', '\b', '\x11', '\x1', '\x2', '\xC0', '\xC1', '\a', '$', '\x2', 
-		'\x2', '\xC1', '\xC2', '\a', '\"', '\x2', '\x2', '\xC2', '\xC3', '\a', 
-		'\x1F', '\x2', '\x2', '\xC3', '\xC7', '\b', '\x11', '\x1', '\x2', '\xC4', 
-		'\xC5', '\a', '$', '\x2', '\x2', '\xC5', '\xC7', '\b', '\x11', '\x1', 
-		'\x2', '\xC6', '\xAF', '\x3', '\x2', '\x2', '\x2', '\xC6', '\xB1', '\x3', 
-		'\x2', '\x2', '\x2', '\xC6', '\xB3', '\x3', '\x2', '\x2', '\x2', '\xC6', 
-		'\xB8', '\x3', '\x2', '\x2', '\x2', '\xC6', '\xBC', '\x3', '\x2', '\x2', 
-		'\x2', '\xC6', '\xC0', '\x3', '\x2', '\x2', '\x2', '\xC6', '\xC4', '\x3', 
-		'\x2', '\x2', '\x2', '\xC7', '!', '\x3', '\x2', '\x2', '\x2', '\f', ')', 
-		'\x36', '\x44', 'Q', 'Z', '^', 'j', '\x9E', '\xAA', '\xC6',
+		'\x2', '\xB7', '\xCD', '\x3', '\x2', '\x2', '\x2', '\xB8', '\xB9', '\a', 
+		'$', '\x2', '\x2', '\xB9', '\xCD', '\b', '\x11', '\x1', '\x2', '\xBA', 
+		'\xBB', '\a', '\x17', '\x2', '\x2', '\xBB', '\xBC', '\a', '\n', '\x2', 
+		'\x2', '\xBC', '\xBD', '\a', '\v', '\x2', '\x2', '\xBD', '\xCD', '\b', 
+		'\x11', '\x1', '\x2', '\xBE', '\xBF', '\a', '\x18', '\x2', '\x2', '\xBF', 
+		'\xC0', '\a', '\n', '\x2', '\x2', '\xC0', '\xC1', '\a', '\v', '\x2', '\x2', 
+		'\xC1', '\xCD', '\b', '\x11', '\x1', '\x2', '\xC2', '\xC3', '\a', '$', 
+		'\x2', '\x2', '\xC3', '\xC4', '\a', '\"', '\x2', '\x2', '\xC4', '\xC5', 
+		'\a', '\x1F', '\x2', '\x2', '\xC5', '\xCD', '\b', '\x11', '\x1', '\x2', 
+		'\xC6', '\xC7', '\a', '$', '\x2', '\x2', '\xC7', '\xC8', '\a', ' ', '\x2', 
+		'\x2', '\xC8', '\xC9', '\x5', '\x1C', '\xF', '\x2', '\xC9', '\xCA', '\a', 
+		'!', '\x2', '\x2', '\xCA', '\xCB', '\b', '\x11', '\x1', '\x2', '\xCB', 
+		'\xCD', '\x3', '\x2', '\x2', '\x2', '\xCC', '\xAF', '\x3', '\x2', '\x2', 
+		'\x2', '\xCC', '\xB1', '\x3', '\x2', '\x2', '\x2', '\xCC', '\xB3', '\x3', 
+		'\x2', '\x2', '\x2', '\xCC', '\xB8', '\x3', '\x2', '\x2', '\x2', '\xCC', 
+		'\xBA', '\x3', '\x2', '\x2', '\x2', '\xCC', '\xBE', '\x3', '\x2', '\x2', 
+		'\x2', '\xCC', '\xC2', '\x3', '\x2', '\x2', '\x2', '\xCC', '\xC6', '\x3', 
+		'\x2', '\x2', '\x2', '\xCD', '!', '\x3', '\x2', '\x2', '\x2', '\f', ')', 
+		'\x36', '\x44', 'Q', 'Z', '^', 'j', '\x9E', '\xAA', '\xCC',
 	};
 
 	public static readonly ATN _ATN =
