@@ -159,7 +159,7 @@ st_print: PRINT OP_PAR
             Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
         } else {
-            //Emit("teste" + $e1.type, 0);
+            Console.Error.WriteLine("teste: " + $e1.type);            
             Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
             ////System.Environment.Exit(1);
         }
@@ -235,7 +235,7 @@ st_break: BREAK
 st_continue: CONTINUE
     {
         if (!inside_while) {
-            Console.Error.WriteLine("\nERROR - Trying to use 'continue' outside a loop.\n");         
+            Console.Error.WriteLine("ERROR - Trying to use 'continue' outside a loop.\n");         
             //System.Environment.Exit(1);
         }
 
@@ -255,7 +255,7 @@ st_array_new: NAME ATTRIB OP_BRA CL_BRA
             int index = symbol_table.IndexOf($NAME.text);
             Emit("astore " + index + "\n", 1);            
         } else {
-            Console.Error.WriteLine("\nERROR - Variable already exisis - 'st_array_new' expression.\n");         
+            Console.Error.WriteLine("# error: " + $NAME.text + " is already declared");         
             //System.Environment.Exit(1);
         }        
     };
@@ -287,8 +287,11 @@ st_array_set: NAME
     }
     OP_BRA e1 = expression CL_BRA ATTRIB e2 = expression
     {
-        if ($e1.type != 'i' || $e2.type != 'i') {
-            Console.Error.WriteLine("\n# error: cannot mix types - array element assignement");         
+              
+        if ($e1.type != 'i') {
+            Console.Error.WriteLine("# error: array index must be integer");         
+        } else if ($e2.type != 'i') {
+            Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
             //System.Environment.Exit(1);
         }
 
@@ -309,18 +312,18 @@ st_attib: NAME ATTRIB expression
             if ($expression.type == type) {
                 Emit("istore " + index + "\n", -1);
             } else {
-                Console.Error.WriteLine("# error: " + $NAME.text + " is integer");
+                Console.Error.WriteLine("# error: '" + $NAME.text + "' is integer");
                 //System.Environment.Exit(1);
             }            
         } else if (type == 's') {
             if ($expression.type == type) {
                 Emit("astore " + index + "\n", -1);
             } else {
-                Console.Error.WriteLine("# error: " + $NAME.text + " is string");
+                Console.Error.WriteLine("# error: '" + $NAME.text + "' is string");
                 //System.Environment.Exit(1);
             }             
         } else {
-            Console.Error.WriteLine("\nERROR - Type error in 'st_attib' expression.\n");         
+            Console.Error.WriteLine("# error: " + $NAME.text + "' is array");         
             ////System.Environment.Exit(1);
         }        
     };
@@ -437,20 +440,26 @@ factor returns [char type]:
         Emit("invokestatic Runtime/readString()Ljava/lang/String;", 1);        
         $type = 's';
     }
-    | NAME DOT LENGTH
+    | NAME
     {
         int index = symbol_table.IndexOf($NAME.text); 
-        char type = 'i';
-        Emit("aload " + index, -1);
-        Emit("invokevirtual Array/length()I", 0);        
-        Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0);      
+        Emit("aload " + index, -1);        
     }
-    | NAME OP_BRA expression CL_BRA
+    DOT LENGTH
+    {       
+        Emit("invokevirtual Array/length()I", 0);        
+        //Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0);  
+        $type = 'i';     
+    }
+    | NAME
     {
         int index = symbol_table.IndexOf($NAME.text);
-        char type = type_table[index];
         Emit("aload " + index, -1);
+    }
+    OP_BRA expression CL_BRA
+    {   
         Emit("invokevirtual Array/get(I)I", -1);
-        Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0); 
+        //Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0); 
+        $type = 'i';   
     };
  

@@ -1,3 +1,4 @@
 a = []
 a.push(123)
 print(a[0])
+print(a.length)

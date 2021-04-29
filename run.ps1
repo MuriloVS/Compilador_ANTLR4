@@ -11,7 +11,7 @@
 # error-05-array-checking
 
 # nome do arquivo testado deve ser mudado aqui
-Get-Content test-14-array.exp | .\Compiler  > Test.j -encoding utf8
+Get-Content error-05-array-checking.exp | .\Compiler  > Test.j -encoding utf8
 
 if ( $? ) {     
     java -jar  jasmin-2.4.jar Test.j

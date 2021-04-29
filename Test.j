@@ -10,13 +10,7 @@
 
 .method public static main([Ljava/lang/String;)V
 
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    ldc "Enter array size:"
-    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    invokevirtual java/io/PrintStream/println()V
-
-    invokestatic Runtime/readInt()I
+    ldc 2
     istore 0
 
     new Array
@@ -24,100 +18,161 @@
     invokespecial Array/<init>()V
     astore 1
 
+    aload 1
+    ldc 1
+    invokevirtual Array/push(I)V
+
+    ldc "Z"
+    astore 2
+
+    ldc 2
+    ldc "X"
+    aload 1
+    aload 1
+    ldc 2
+    invokevirtual Array/set(II)V
+
+    aload 1
+    aload 2
+    ldc 2
+    invokevirtual Array/set(II)V
+
+    aload 0
     ldc 0
-    istore 2
+    ldc 2
+    invokevirtual Array/set(II)V
+
+    aload 1
+    ldc 0
+    aload 1
+    invokevirtual Array/set(II)V
+
+    aload 1
+    ldc 0
+    aload 2
+    invokevirtual Array/set(II)V
+
+    aload 2
+    ldc 0
+    ldc 2
+    invokevirtual Array/set(II)V
+
+    aload -1
+    ldc 0
+    ldc 2
+    invokevirtual Array/set(II)V
+
+    aload 1
+    aload 0
+    ldc 0
+    invokevirtual Array/get(I)I
+    istore 0
+
+    aload 2
+    ldc 0
+    invokevirtual Array/get(I)I
+    istore 0
+
+    aload -1
+    ldc 0
+    invokevirtual Array/get(I)I
+    istore 0
+
+    aload 0
+    invokevirtual Array/length()I
+    istore 0
+
+    aload 2
+    invokevirtual Array/length()I
+    istore 0
+
+    aload -1
+    invokevirtual Array/length()I
+    istore 0
+
+    aload 1
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    aload 1
+    aload 1
+    iadd
+    invokevirtual Array/string()Ljava/lang/String;
+    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
+
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    invokevirtual java/io/PrintStream/println()V
+
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    aload 1
+    iload 0
+    isub
+    invokevirtual Array/string()Ljava/lang/String;
+    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
+
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    invokevirtual java/io/PrintStream/println()V
+
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    iload 0
+    aload 1
+    imul
+    invokevirtual java/io/PrintStream/print(I)V
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    invokevirtual java/io/PrintStream/println()V
+
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    aload 1
+    aload 2
+    idiv
+    invokevirtual Array/string()Ljava/lang/String;
+    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
+
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    invokevirtual java/io/PrintStream/println()V
+
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    ldc 8
+    aload 1
+    irem
+    invokevirtual java/io/PrintStream/print(I)V
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    invokevirtual java/io/PrintStream/println()V
 
 
     BEGIN_WHILE_0:
 
-    iload 2
-    iload 0
-    if_icmpge END_WHILE_0
     aload 1
-    iload 2
+    ldc 2
+    if_icmple END_WHILE_0
     ldc 1
-    iadd
-    invokevirtual Array/push(I)V
-
-    iload 2
-    ldc 1
-    iadd
-    istore 2
+    istore 0
 
     goto BEGIN_WHILE_0
 
     END_WHILE_0:
 
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    aload 1
-    invokevirtual Array/string()Ljava/lang/String;
-    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    invokevirtual java/io/PrintStream/println()V
-
-    aload 1
     ldc 2
-    ldc 999
-    invokevirtual Array/set(II)V
-
     aload 1
-    invokevirtual Array/length()I
-    invokevirtual java/io/PrintStream/print(I)V
+    if_icmpgt NOT_IF_0
+    ldc 2
+    istore 0
 
-    ldc 1
-    isub
-
-    BEGIN_WHILE_1:
-
-    iload 2
-    ldc 0
-    if_icmplt END_WHILE_1
+    goto END_ELSE_0
+NOT_IF_0:
+END_ELSE_0:
     aload 1
-    iload 2
-    iload 2
     aload 1
-    invokevirtual Array/get(I)I
-    invokevirtual java/io/PrintStream/print(I)V
+    if_icmpne NOT_IF_1
+    ldc 3
+    istore 0
 
-    iload 2
-    aload 1
-    invokevirtual Array/get(I)I
-    invokevirtual java/io/PrintStream/print(I)V
-
-    imul
-    invokevirtual Array/set(II)V
-
-    iload 2
-    ldc 1
-    isub
-    istore 2
-
-    goto BEGIN_WHILE_1
-
-    END_WHILE_1:
-
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    aload 1
-    invokevirtual Array/string()Ljava/lang/String;
-    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    invokevirtual java/io/PrintStream/println()V
-
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    aload 1
-    invokevirtual Array/length()I
-    invokevirtual java/io/PrintStream/print(I)V
-
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    invokevirtual java/io/PrintStream/println()V
-
+    goto END_ELSE_1
+NOT_IF_1:
+END_ELSE_1:
     return
-.limit stack 7
+.limit stack 5
 .limit locals 3
 .end method
 
-; symbol_table: n a i 
-; type_table: i a i 
-; used_table: i n a 
+; symbol_table: i a s 
+; type_table: i a s 
+; used_table: a s i 
