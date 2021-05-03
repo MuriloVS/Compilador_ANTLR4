@@ -18,7 +18,7 @@ a[s] = 2        # error: array index must be integer
 i[0] = 2        # error: 'i' is not array
 a[0] = a        # error: 'a' is array
 a[0] = s        # error: 'a' is array
-s[0] = 2        # error: 'i' is not array
+s[0] = 2        # error: 's' is not array
 x[0] = 2        # error: 'x' not defined
 
 i = a           # error: 'i' is integer

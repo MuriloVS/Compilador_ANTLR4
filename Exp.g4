@@ -454,8 +454,17 @@ factor returns [char type]:
     }
     | NAME
     {
-        int index = symbol_table.IndexOf($NAME.text);
-        Emit("aload " + index, -1);
+        if (!symbol_table.Contains($NAME.text)) {
+            Console.Error.WriteLine("# error: '" + $NAME.text + "' not defined - line " + $NAME.line);
+        } else {
+            int index = symbol_table.IndexOf($NAME.text);
+            char type = type_table[index];
+            if (type != 'a') {
+                Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);
+            }
+            Emit("aload " + index, -1);
+        }
+        
     }
     OP_BRA expression CL_BRA
     {   

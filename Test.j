@@ -73,7 +73,6 @@
     invokevirtual Array/get(I)I
     istore 0
 
-    aload -1
     ldc 0
     invokevirtual Array/get(I)I
     istore 0

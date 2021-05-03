@@ -1404,8 +1404,17 @@ public class ExpParser extends Parser {
 				setState(197);
 				((FactorContext)_localctx).NAME = match(NAME);
 
-				        int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null));
-				        Emit("aload " + index, -1);
+				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
+				            Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' not defined - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				        } else {
+				            int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null));
+				            char type = type_table[index];
+				            if (type != 'a') {
+				                Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' is not array - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				            }
+				            Emit("aload " + index, -1);
+				        }
+				        
 				    
 				setState(199);
 				match(OP_BRA);

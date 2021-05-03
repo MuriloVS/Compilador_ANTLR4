@@ -7,3 +7,6 @@ Test.class
 Compiler.exe
 ExpParser.cs
 .antlr/ExpParser.java
+*.cs
+Compiler.exe
+Test.j
