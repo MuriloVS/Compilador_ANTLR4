@@ -900,8 +900,17 @@ public partial class ExpParser : Parser {
 			State = 130;
 			_localctx._NAME = Match(NAME);
 
-			        int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));                    
-			        Emit("aload " + index, -1);      
+			        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
+			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' not defined - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+			        } else {
+			            int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
+			            char type = type_table[index];
+			            if (type != 'a') {
+			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is not array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));                    
+			            } else {
+			                Emit("aload " + index, -1);      
+			            }
+			        }
 			    
 			State = 132;
 			Match(OP_BRA);
@@ -975,23 +984,25 @@ public partial class ExpParser : Parser {
 			        
 			        int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
 			        char type = type_table[index];
-			        
-			        if (type == 'i') {
+
+			        if (type == 'a') {
+			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is integer - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+			        } else if (type == 'i') {
 			            if (_localctx._expression.type == type) {
 			                Emit("istore " + index + "\n", -1);
 			            } else {
-			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is integer");
+			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is integer - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
 			                //System.Environment.Exit(1);
 			            }            
 			        } else if (type == 's') {
 			            if (_localctx._expression.type == type) {
 			                Emit("astore " + index + "\n", -1);
 			            } else {
-			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is string");
+			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is string  - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
 			                //System.Environment.Exit(1);
 			            }             
 			        } else {
-			            Console.Error.WriteLine("# error: " + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
+			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
 			            ////System.Environment.Exit(1);
 			        }        
 			    
@@ -1055,7 +1066,7 @@ public partial class ExpParser : Parser {
 			_localctx.e2 = expression();
 
 			        if (_localctx.e1.type != 'i' || _localctx.e2.type  != 'i') {
-			            Console.Error.WriteLine("# error: cannot mix types - comparison");         
+			            Console.Error.WriteLine("# error: cannot mix types - comparison - line " + (_localctx.op!=null?_localctx.op.Line:0));         
 			            //System.Environment.Exit(1);
 			        }
 			        if ((_localctx.op!=null?_localctx.op.Type:0) == EQ) {            
@@ -1141,7 +1152,7 @@ public partial class ExpParser : Parser {
 				_localctx.t2 = term();
 
 				        if (_localctx.t1.type != 'i' || _localctx.t2.type != 'i') {
-				            Console.Error.WriteLine("# error: cannot mix types - plus or minus");         
+				            Console.Error.WriteLine("# error: cannot mix types - plus or minus - line " + (_localctx.op!=null?_localctx.op.Line:0));         
 				            ////System.Environment.Exit(1);
 				        }
 				        if ((_localctx.op!=null?_localctx.op.Type:0) == PLUS ) {
@@ -1232,7 +1243,7 @@ public partial class ExpParser : Parser {
 				_localctx.f2 = factor();
 
 				        if (_localctx.f1.type != 'i' || _localctx.f2.type != 'i') {
-				            Console.Error.WriteLine("# error: cannot mix types - times, over or rem");         
+				            Console.Error.WriteLine("# error: cannot mix types - times, over or rem - line " + (_localctx.op!=null?_localctx.op.Line:0));         
 				            //System.Environment.Exit(1);
 				        }
 				        if ((_localctx.op!=null?_localctx.op.Type:0) == TIMES ) {
@@ -1407,8 +1418,19 @@ public partial class ExpParser : Parser {
 				State = 192;
 				_localctx._NAME = Match(NAME);
 
-				        int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null)); 
-				        Emit("aload " + index, -1);        
+				        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
+				            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' not defined - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+				        } else {
+				            int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
+				            char type = type_table[index];
+
+				            if (type != 'a') {
+				                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is not array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+				                
+				            } else {
+				                Emit("aload " + index, -1);        
+				            }
+				        }        
 				    
 				State = 194;
 				Match(DOT);
@@ -1433,10 +1455,10 @@ public partial class ExpParser : Parser {
 				            char type = type_table[index];
 				            if (type != 'a') {
 				                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is not array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+				            } else {
+				                Emit("aload " + index, -1);
 				            }
-				            Emit("aload " + index, -1);
 				        }
-				        
 				    
 				State = 199;
 				Match(OP_BRA);

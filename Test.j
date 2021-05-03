@@ -37,7 +37,6 @@
     ldc 2
     invokevirtual Array/set(II)V
 
-    aload 0
     ldc 0
     ldc 2
     invokevirtual Array/set(II)V
@@ -52,23 +51,15 @@
     aload 2
     invokevirtual Array/set(II)V
 
-    aload 2
     ldc 0
     ldc 2
     invokevirtual Array/set(II)V
 
-    aload -1
     ldc 0
     ldc 2
     invokevirtual Array/set(II)V
 
     aload 1
-    aload 0
-    ldc 0
-    invokevirtual Array/get(I)I
-    istore 0
-
-    aload 2
     ldc 0
     invokevirtual Array/get(I)I
     istore 0
@@ -77,15 +68,16 @@
     invokevirtual Array/get(I)I
     istore 0
 
-    aload 0
+    ldc 0
+    invokevirtual Array/get(I)I
+    istore 0
+
     invokevirtual Array/length()I
     istore 0
 
-    aload 2
     invokevirtual Array/length()I
     istore 0
 
-    aload -1
     invokevirtual Array/length()I
     istore 0
 

@@ -885,8 +885,17 @@ public class ExpParser extends Parser {
 			setState(130);
 			((St_array_setContext)_localctx).NAME = match(NAME);
 
-			        int index = symbol_table.IndexOf((((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null));                    
-			        Emit("aload " + index, -1);      
+			        if (!symbol_table.Contains((((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null))) {
+			            Console.Error.WriteLine("# error: '" + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null) + "' not defined - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));
+			        } else {
+			            int index = symbol_table.IndexOf((((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null));
+			            char type = type_table[index];
+			            if (type != 'a') {
+			                Console.Error.WriteLine("# error: '" + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null) + "' is not array - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));                    
+			            } else {
+			                Emit("aload " + index, -1);      
+			            }
+			        }
 			    
 			setState(132);
 			match(OP_BRA);
@@ -958,23 +967,25 @@ public class ExpParser extends Parser {
 			        
 			        int index = symbol_table.IndexOf((((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null));
 			        char type = type_table[index];
-			        
-			        if (type == 'i') {
+
+			        if (type == 'a') {
+			            Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is integer - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));
+			        } else if (type == 'i') {
 			            if (((St_attibContext)_localctx).expression.type == type) {
 			                Emit("istore " + index + "\n", -1);
 			            } else {
-			                Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is integer");
+			                Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is integer - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));
 			                //System.Environment.Exit(1);
 			            }            
 			        } else if (type == 's') {
 			            if (((St_attibContext)_localctx).expression.type == type) {
 			                Emit("astore " + index + "\n", -1);
 			            } else {
-			                Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is string");
+			                Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is string  - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));
 			                //System.Environment.Exit(1);
 			            }             
 			        } else {
-			            Console.Error.WriteLine("# error: " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is array - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));         
+			            Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is array - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));         
 			            ////System.Environment.Exit(1);
 			        }        
 			    
@@ -1037,7 +1048,7 @@ public class ExpParser extends Parser {
 			((ComparisonContext)_localctx).e2 = expression();
 
 			        if (((ComparisonContext)_localctx).e1.type != 'i' || ((ComparisonContext)_localctx).e2.type  != 'i') {
-			            Console.Error.WriteLine("# error: cannot mix types - comparison");         
+			            Console.Error.WriteLine("# error: cannot mix types - comparison - line " + (((ComparisonContext)_localctx).op!=null?((ComparisonContext)_localctx).op.getLine():0));         
 			            //System.Environment.Exit(1);
 			        }
 			        if ((((ComparisonContext)_localctx).op!=null?((ComparisonContext)_localctx).op.getType():0) == EQ) {            
@@ -1122,7 +1133,7 @@ public class ExpParser extends Parser {
 				((ExpressionContext)_localctx).t2 = term();
 
 				        if (((ExpressionContext)_localctx).t1.type != 'i' || ((ExpressionContext)_localctx).t2.type != 'i') {
-				            Console.Error.WriteLine("# error: cannot mix types - plus or minus");         
+				            Console.Error.WriteLine("# error: cannot mix types - plus or minus - line " + (((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getLine():0));         
 				            ////System.Environment.Exit(1);
 				        }
 				        if ((((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getType():0) == PLUS ) {
@@ -1212,7 +1223,7 @@ public class ExpParser extends Parser {
 				((TermContext)_localctx).f2 = factor();
 
 				        if (((TermContext)_localctx).f1.type != 'i' || ((TermContext)_localctx).f2.type != 'i') {
-				            Console.Error.WriteLine("# error: cannot mix types - times, over or rem");         
+				            Console.Error.WriteLine("# error: cannot mix types - times, over or rem - line " + (((TermContext)_localctx).op!=null?((TermContext)_localctx).op.getLine():0));         
 				            //System.Environment.Exit(1);
 				        }
 				        if ((((TermContext)_localctx).op!=null?((TermContext)_localctx).op.getType():0) == TIMES ) {
@@ -1385,8 +1396,19 @@ public class ExpParser extends Parser {
 				setState(192);
 				((FactorContext)_localctx).NAME = match(NAME);
 
-				        int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null)); 
-				        Emit("aload " + index, -1);        
+				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
+				            Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' not defined - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				        } else {
+				            int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null));
+				            char type = type_table[index];
+
+				            if (type != 'a') {
+				                Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' is not array - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				                
+				            } else {
+				                Emit("aload " + index, -1);        
+				            }
+				        }        
 				    
 				setState(194);
 				match(DOT);
@@ -1411,10 +1433,10 @@ public class ExpParser extends Parser {
 				            char type = type_table[index];
 				            if (type != 'a') {
 				                Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' is not array - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				            } else {
+				                Emit("aload " + index, -1);
 				            }
-				            Emit("aload " + index, -1);
 				        }
-				        
 				    
 				setState(199);
 				match(OP_BRA);

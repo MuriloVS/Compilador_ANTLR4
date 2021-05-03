@@ -10,3 +10,5 @@ ExpParser.cs
 *.cs
 Compiler.exe
 Test.j
+.antlr/ExpParser.java
+Compiler.exe

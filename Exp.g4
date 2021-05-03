@@ -282,8 +282,17 @@ st_array_push: NAME
 
 st_array_set: NAME
     {
-        int index = symbol_table.IndexOf($NAME.text);                    
-        Emit("aload " + index, -1);      
+        if (!symbol_table.Contains($NAME.text)) {
+            Console.Error.WriteLine("# error: '" + $NAME.text + "' not defined - line " + $NAME.line);
+        } else {
+            int index = symbol_table.IndexOf($NAME.text);
+            char type = type_table[index];
+            if (type != 'a') {
+                Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);                    
+            } else {
+                Emit("aload " + index, -1);      
+            }
+        }
     }
     OP_BRA e1 = expression CL_BRA ATTRIB e2 = expression
     {              
@@ -309,23 +318,25 @@ st_attib: NAME ATTRIB expression
         
         int index = symbol_table.IndexOf($NAME.text);
         char type = type_table[index];
-        
-        if (type == 'i') {
+
+        if (type == 'a') {
+            Console.Error.WriteLine("# error: '" + $NAME.text + "' is integer - line " + $NAME.line);
+        } else if (type == 'i') {
             if ($expression.type == type) {
                 Emit("istore " + index + "\n", -1);
             } else {
-                Console.Error.WriteLine("# error: '" + $NAME.text + "' is integer");
+                Console.Error.WriteLine("# error: '" + $NAME.text + "' is integer - line " + $NAME.line);
                 //System.Environment.Exit(1);
             }            
         } else if (type == 's') {
             if ($expression.type == type) {
                 Emit("astore " + index + "\n", -1);
             } else {
-                Console.Error.WriteLine("# error: '" + $NAME.text + "' is string");
+                Console.Error.WriteLine("# error: '" + $NAME.text + "' is string  - line " + $NAME.line);
                 //System.Environment.Exit(1);
             }             
         } else {
-            Console.Error.WriteLine("# error: " + $NAME.text + "' is array - line " + $NAME.line);         
+            Console.Error.WriteLine("# error: '" + $NAME.text + "' is array - line " + $NAME.line);         
             ////System.Environment.Exit(1);
         }        
     };
@@ -334,7 +345,7 @@ st_attib: NAME ATTRIB expression
 comparison: e1 = expression op = ( EQ | NE | GT | GE | LT | LE ) e2 = expression
     {
         if ($e1.type != 'i' || $e2.type  != 'i') {
-            Console.Error.WriteLine("# error: cannot mix types - comparison");         
+            Console.Error.WriteLine("# error: cannot mix types - comparison - line " + $op.line);         
             //System.Environment.Exit(1);
         }
         if ($op.type == EQ) {            
@@ -355,7 +366,7 @@ comparison: e1 = expression op = ( EQ | NE | GT | GE | LT | LE ) e2 = expression
 expression returns [char type] : t1 = term ( op = ( PLUS | MINUS ) t2 = term
     {
         if ($t1.type != 'i' || $t2.type != 'i') {
-            Console.Error.WriteLine("# error: cannot mix types - plus or minus");         
+            Console.Error.WriteLine("# error: cannot mix types - plus or minus - line " + $op.line);         
             ////System.Environment.Exit(1);
         }
         if ($op.type == PLUS ) {
@@ -372,7 +383,7 @@ expression returns [char type] : t1 = term ( op = ( PLUS | MINUS ) t2 = term
 term returns [char type]: f1 = factor ( op = ( TIMES | OVER | REM ) f2 = factor
     {
         if ($f1.type != 'i' || $f2.type != 'i') {
-            Console.Error.WriteLine("# error: cannot mix types - times, over or rem");         
+            Console.Error.WriteLine("# error: cannot mix types - times, over or rem - line " + $op.line);         
             //System.Environment.Exit(1);
         }
         if ($op.type == TIMES ) {
@@ -444,8 +455,19 @@ factor returns [char type]:
     }
     | NAME
     {
-        int index = symbol_table.IndexOf($NAME.text); 
-        Emit("aload " + index, -1);        
+        if (!symbol_table.Contains($NAME.text)) {
+            Console.Error.WriteLine("# error: '" + $NAME.text + "' not defined - line " + $NAME.line);
+        } else {
+            int index = symbol_table.IndexOf($NAME.text);
+            char type = type_table[index];
+
+            if (type != 'a') {
+                Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);
+                
+            } else {
+                Emit("aload " + index, -1);        
+            }
+        }        
     }
     DOT LENGTH
     {       
@@ -461,10 +483,10 @@ factor returns [char type]:
             char type = type_table[index];
             if (type != 'a') {
                 Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);
+            } else {
+                Emit("aload " + index, -1);
             }
-            Emit("aload " + index, -1);
         }
-        
     }
     OP_BRA expression CL_BRA
     {   
