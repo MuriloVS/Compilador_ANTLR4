@@ -788,7 +788,7 @@ public partial class ExpParser : Parser {
 			            int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
 			            Emit("astore " + index + "\n", 1);            
 			        } else {
-			            Console.Error.WriteLine("# error: " + (_localctx._NAME!=null?_localctx._NAME.Text:null) + " is already declared");         
+			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is already declared - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
 			            //System.Environment.Exit(1);
 			        }        
 			    
@@ -913,13 +913,15 @@ public partial class ExpParser : Parser {
 			Match(ATTRIB);
 			State = 136;
 			_localctx.e2 = expression();
-
 			              
 			        if (_localctx.e1.type != 'i') {
-			            Console.Error.WriteLine("# error: array index must be integer");         
+			            Console.Error.WriteLine("# error: array index must be integer - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
 			        } else if (_localctx.e2.type != 'i') {
-			            Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
+			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
 			            //System.Environment.Exit(1);
+			        // } else if (_localctx.e2.type != 'i') {
+			        //     Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
+			        //     //System.Environment.Exit(1);
 			        }
 
 			        Emit("invokevirtual Array/set(II)V\n", -3);        
@@ -989,7 +991,7 @@ public partial class ExpParser : Parser {
 			                //System.Environment.Exit(1);
 			            }             
 			        } else {
-			            Console.Error.WriteLine("# error: " + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is array");         
+			            Console.Error.WriteLine("# error: " + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
 			            ////System.Environment.Exit(1);
 			        }        
 			    
@@ -1053,7 +1055,7 @@ public partial class ExpParser : Parser {
 			_localctx.e2 = expression();
 
 			        if (_localctx.e1.type != 'i' || _localctx.e2.type  != 'i') {
-			            Console.Error.WriteLine("\n# error: cannot mix types - comparison");         
+			            Console.Error.WriteLine("# error: cannot mix types - comparison");         
 			            //System.Environment.Exit(1);
 			        }
 			        if ((_localctx.op!=null?_localctx.op.Type:0) == EQ) {            
@@ -1139,7 +1141,7 @@ public partial class ExpParser : Parser {
 				_localctx.t2 = term();
 
 				        if (_localctx.t1.type != 'i' || _localctx.t2.type != 'i') {
-				            Console.Error.WriteLine("\n# error: cannot mix types - plus or minus");         
+				            Console.Error.WriteLine("# error: cannot mix types - plus or minus");         
 				            ////System.Environment.Exit(1);
 				        }
 				        if ((_localctx.op!=null?_localctx.op.Type:0) == PLUS ) {
@@ -1230,7 +1232,7 @@ public partial class ExpParser : Parser {
 				_localctx.f2 = factor();
 
 				        if (_localctx.f1.type != 'i' || _localctx.f2.type != 'i') {
-				            Console.Error.WriteLine("\n# error: cannot mix types - times, over or rem");         
+				            Console.Error.WriteLine("# error: cannot mix types - times, over or rem");         
 				            //System.Environment.Exit(1);
 				        }
 				        if ((_localctx.op!=null?_localctx.op.Type:0) == TIMES ) {
@@ -1413,8 +1415,7 @@ public partial class ExpParser : Parser {
 				State = 195;
 				Match(LENGTH);
 				       
-				        Emit("invokevirtual Array/length()I", 0);        
-				        //Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0);  
+				        Emit("invokevirtual Array/length()I", 0);                
 				        _localctx.type =  'i';     
 				    
 				}
@@ -1435,8 +1436,7 @@ public partial class ExpParser : Parser {
 				State = 201;
 				Match(CL_BRA);
 				   
-				        Emit("invokevirtual Array/get(I)I", -1);
-				        //Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0); 
+				        Emit("invokevirtual Array/get(I)I", -1);        
 				        _localctx.type =  'i';   
 				    
 				}

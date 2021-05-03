@@ -255,7 +255,7 @@ st_array_new: NAME ATTRIB OP_BRA CL_BRA
             int index = symbol_table.IndexOf($NAME.text);
             Emit("astore " + index + "\n", 1);            
         } else {
-            Console.Error.WriteLine("# error: " + $NAME.text + " is already declared");         
+            Console.Error.WriteLine("# error: '" + $NAME.text + "' is already declared - line " + $NAME.line);         
             //System.Environment.Exit(1);
         }        
     };
@@ -286,13 +286,15 @@ st_array_set: NAME
         Emit("aload " + index, -1);      
     }
     OP_BRA e1 = expression CL_BRA ATTRIB e2 = expression
-    {
-              
+    {              
         if ($e1.type != 'i') {
-            Console.Error.WriteLine("# error: array index must be integer");         
+            Console.Error.WriteLine("# error: array index must be integer - line " + $NAME.line);         
         } else if ($e2.type != 'i') {
-            Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
+            Console.Error.WriteLine("# error: '" + $NAME.text + "' is array - line " + $NAME.line);         
             //System.Environment.Exit(1);
+        // } else if ($e2.type != 'i') {
+        //     Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
+        //     //System.Environment.Exit(1);
         }
 
         Emit("invokevirtual Array/set(II)V\n", -3);        
@@ -323,7 +325,7 @@ st_attib: NAME ATTRIB expression
                 //System.Environment.Exit(1);
             }             
         } else {
-            Console.Error.WriteLine("# error: " + $NAME.text + "' is array");         
+            Console.Error.WriteLine("# error: " + $NAME.text + "' is array - line " + $NAME.line);         
             ////System.Environment.Exit(1);
         }        
     };
@@ -332,7 +334,7 @@ st_attib: NAME ATTRIB expression
 comparison: e1 = expression op = ( EQ | NE | GT | GE | LT | LE ) e2 = expression
     {
         if ($e1.type != 'i' || $e2.type  != 'i') {
-            Console.Error.WriteLine("\n# error: cannot mix types - comparison");         
+            Console.Error.WriteLine("# error: cannot mix types - comparison");         
             //System.Environment.Exit(1);
         }
         if ($op.type == EQ) {            
@@ -353,7 +355,7 @@ comparison: e1 = expression op = ( EQ | NE | GT | GE | LT | LE ) e2 = expression
 expression returns [char type] : t1 = term ( op = ( PLUS | MINUS ) t2 = term
     {
         if ($t1.type != 'i' || $t2.type != 'i') {
-            Console.Error.WriteLine("\n# error: cannot mix types - plus or minus");         
+            Console.Error.WriteLine("# error: cannot mix types - plus or minus");         
             ////System.Environment.Exit(1);
         }
         if ($op.type == PLUS ) {
@@ -370,7 +372,7 @@ expression returns [char type] : t1 = term ( op = ( PLUS | MINUS ) t2 = term
 term returns [char type]: f1 = factor ( op = ( TIMES | OVER | REM ) f2 = factor
     {
         if ($f1.type != 'i' || $f2.type != 'i') {
-            Console.Error.WriteLine("\n# error: cannot mix types - times, over or rem");         
+            Console.Error.WriteLine("# error: cannot mix types - times, over or rem");         
             //System.Environment.Exit(1);
         }
         if ($op.type == TIMES ) {
@@ -447,8 +449,7 @@ factor returns [char type]:
     }
     DOT LENGTH
     {       
-        Emit("invokevirtual Array/length()I", 0);        
-        //Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0);  
+        Emit("invokevirtual Array/length()I", 0);                
         $type = 'i';     
     }
     | NAME
@@ -458,8 +459,7 @@ factor returns [char type]:
     }
     OP_BRA expression CL_BRA
     {   
-        Emit("invokevirtual Array/get(I)I", -1);
-        //Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0); 
+        Emit("invokevirtual Array/get(I)I", -1);        
         $type = 'i';   
     };
  

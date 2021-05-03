@@ -777,7 +777,7 @@ public class ExpParser extends Parser {
 			            int index = symbol_table.IndexOf((((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getText():null));
 			            Emit("astore " + index + "\n", 1);            
 			        } else {
-			            Console.Error.WriteLine("# error: " + (((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getText():null) + " is already declared");         
+			            Console.Error.WriteLine("# error: '" + (((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getText():null) + "' is already declared - line " + (((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getLine():0));         
 			            //System.Environment.Exit(1);
 			        }        
 			    
@@ -898,13 +898,15 @@ public class ExpParser extends Parser {
 			match(ATTRIB);
 			setState(136);
 			((St_array_setContext)_localctx).e2 = expression();
-
 			              
 			        if (((St_array_setContext)_localctx).e1.type != 'i') {
-			            Console.Error.WriteLine("# error: array index must be integer");         
+			            Console.Error.WriteLine("# error: array index must be integer - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));         
 			        } else if (((St_array_setContext)_localctx).e2.type != 'i') {
-			            Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
+			            Console.Error.WriteLine("# error: '" + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null) + "' is array - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));         
 			            //System.Environment.Exit(1);
+			        // } else if (((St_array_setContext)_localctx).e2.type != 'i') {
+			        //     Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
+			        //     //System.Environment.Exit(1);
 			        }
 
 			        Emit("invokevirtual Array/set(II)V\n", -3);        
@@ -972,7 +974,7 @@ public class ExpParser extends Parser {
 			                //System.Environment.Exit(1);
 			            }             
 			        } else {
-			            Console.Error.WriteLine("# error: " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is array");         
+			            Console.Error.WriteLine("# error: " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is array - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));         
 			            ////System.Environment.Exit(1);
 			        }        
 			    
@@ -1035,7 +1037,7 @@ public class ExpParser extends Parser {
 			((ComparisonContext)_localctx).e2 = expression();
 
 			        if (((ComparisonContext)_localctx).e1.type != 'i' || ((ComparisonContext)_localctx).e2.type  != 'i') {
-			            Console.Error.WriteLine("\n# error: cannot mix types - comparison");         
+			            Console.Error.WriteLine("# error: cannot mix types - comparison");         
 			            //System.Environment.Exit(1);
 			        }
 			        if ((((ComparisonContext)_localctx).op!=null?((ComparisonContext)_localctx).op.getType():0) == EQ) {            
@@ -1120,7 +1122,7 @@ public class ExpParser extends Parser {
 				((ExpressionContext)_localctx).t2 = term();
 
 				        if (((ExpressionContext)_localctx).t1.type != 'i' || ((ExpressionContext)_localctx).t2.type != 'i') {
-				            Console.Error.WriteLine("\n# error: cannot mix types - plus or minus");         
+				            Console.Error.WriteLine("# error: cannot mix types - plus or minus");         
 				            ////System.Environment.Exit(1);
 				        }
 				        if ((((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getType():0) == PLUS ) {
@@ -1210,7 +1212,7 @@ public class ExpParser extends Parser {
 				((TermContext)_localctx).f2 = factor();
 
 				        if (((TermContext)_localctx).f1.type != 'i' || ((TermContext)_localctx).f2.type != 'i') {
-				            Console.Error.WriteLine("\n# error: cannot mix types - times, over or rem");         
+				            Console.Error.WriteLine("# error: cannot mix types - times, over or rem");         
 				            //System.Environment.Exit(1);
 				        }
 				        if ((((TermContext)_localctx).op!=null?((TermContext)_localctx).op.getType():0) == TIMES ) {
@@ -1391,8 +1393,7 @@ public class ExpParser extends Parser {
 				setState(195);
 				match(LENGTH);
 				       
-				        Emit("invokevirtual Array/length()I", 0);        
-				        //Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0);  
+				        Emit("invokevirtual Array/length()I", 0);                
 				        ((FactorContext)_localctx).type =  'i';     
 				    
 				}
@@ -1413,8 +1414,7 @@ public class ExpParser extends Parser {
 				setState(201);
 				match(CL_BRA);
 				   
-				        Emit("invokevirtual Array/get(I)I", -1);
-				        //Emit("invokevirtual java/io/PrintStream/print(I)V\n", 0); 
+				        Emit("invokevirtual Array/get(I)I", -1);        
 				        ((FactorContext)_localctx).type =  'i';   
 				    
 				}
