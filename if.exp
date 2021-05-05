@@ -1,4 +1,14 @@
-a = []
-a.push(123)
-print(a[0])
-print(a.length)
+def cube() {
+    n = 4
+    print(n * n * n)    
+}
+
+def kek() {
+    n = 3
+    print(n * n * n)    
+}
+
+n = "abc"
+cube()
+kek()
+print(n)

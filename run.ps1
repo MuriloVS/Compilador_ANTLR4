@@ -5,13 +5,14 @@
 # test-09-sequential-while      test-10-chained-while
 # test-11-break-continue        test-12-chained-conditionals
 # test-13-strings               test-14-array
+# test-15-simple-functions
 
 # error-01-undefined-variables  error-02-unused-variables
 # error-03-break-continue       error-04-type-checking
-# error-05-array-checking
+# error-05-array-checking       error-06-simple-functions
 
 # nome do arquivo testado deve ser mudado aqui
-Get-Content error-05-array-checking.exp | .\Compiler  > Test.j -encoding utf8
+Get-Content error-06-simple-functions.exp | .\Compiler  > Test.j -encoding utf8
 
 if ( $? ) {     
     java -jar  jasmin-2.4.jar Test.j
@@ -21,11 +22,13 @@ if ( $? ) {
         
         if ( $? ) {
             Write-Output "`nRun sucessfull.`n"
-        } else {
+        }
+        else {
             Remove-Item Test.class 
         }
     }
-} else {   
+}
+else {   
     # mensagem de erro deve aparecer aqui se implementado corretamente - testar os exemplos 
     # Remove-Item Test.j
 }    
