@@ -5,14 +5,15 @@
 # test-09-sequential-while      test-10-chained-while
 # test-11-break-continue        test-12-chained-conditionals
 # test-13-strings               test-14-array
-# test-15-simple-functions
+# test-15-simple-functions      test-16-parameters
 
 # error-01-undefined-variables  error-02-unused-variables
 # error-03-break-continue       error-04-type-checking
 # error-05-array-checking       error-06-simple-functions
+# error-07-parameters
 
 # nome do arquivo testado deve ser mudado aqui
-Get-Content error-06-simple-functions.exp | .\Compiler  > Test.j -encoding utf8
+Get-Content test-16-parameters.exp | .\Compiler  > Test.j -encoding utf8
 
 if ( $? ) {     
     java -jar  jasmin-2.4.jar Test.j

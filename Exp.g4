@@ -15,16 +15,21 @@ grammar Exp;
     List<char> type_table = new List<char>();
     List<string> used_table = new List<string>();
 
+    string func_modifier = "";
+
     int stack_max = 0;
     int stack_curr = 0;
     
     int if_global = 0;
     // int has_else = 0;
     // int else_global = 0;
-   
+
     int while_break_continue = 0;
     int while_global = 0;
     bool inside_while = false;
+
+    int arguments_count = 0;
+    int parameters_count = 0;
 
     List<int> else_local = new List<int>();
 
@@ -106,31 +111,72 @@ program:
     } (function)* main;
 
 function:
-	DEF NAME {
+	DEF NAME OP_PAR (parameters)? {
         // declarando duas vezes a mesma função
+        // Console.Error.WriteLine(symbol_table.Count);
         if (functions_list.Contains($NAME.text)) {                
             Console.Error.WriteLine("# error - function '" + $NAME.text + "' already declared - line " + $NAME.line);             
             // System.Environment.Exit(1);
         } else {
-            functions_list.Add($NAME.text);
-            System.Console.WriteLine(".method public static " + $NAME.text + "()V\n");      
+            for (int i = 0; i < symbol_table.Count; i++) {
+                func_modifier += "I";
+            }
+
+            string func_name = $NAME.text + "(" + func_modifier + ")V";
+            functions_list.Add(func_name);
+
+            System.Console.WriteLine(".method public static " + func_name+ "\n"); 
         }        
-    } OP_PAR CL_PAR OP_CUR (statement)+ CL_CUR {
-        // limpar as tabelas aqui
+    } CL_PAR OP_CUR (statement)+ CL_CUR {
+        // limpar as tabelas aqui   
         System.Console.WriteLine("    return");
-        System.Console.WriteLine(".limit stack " + stack_max); 
-              
+        System.Console.WriteLine(".limit stack " + stack_max);
+
         if (symbol_table.Count > 0) {
             System.Console.WriteLine(".limit locals " + symbol_table.Count);
         }
 
-        System.Console.WriteLine(".end method\n");
+        System.Console.WriteLine(".end method");
+        
+        System.Console.Write("\n; symbol_table: ");
+        foreach (string s in symbol_table) {
+            System.Console.Write(s + " ");
+        }
+        System.Console.Write("\n; type_table: ");
+        foreach (char c in type_table) {
+            System.Console.Write(c + " ");
+        }        
+        System.Console.Write("\n; used_table: ");
+        foreach (string s in used_table) {
+            System.Console.Write(s + " ");
+        }
+        System.Console.WriteLine("\n");
 
+        func_modifier = "";
         symbol_table.Clear();
         type_table.Clear();
         used_table.Clear();
         stack_curr = 0;
         stack_max = 0;
+    };
+
+parameters:
+	NAME {        
+        if (!symbol_table.Contains($NAME.text)) {
+            symbol_table.Add($NAME.text);
+            used_table.Add($NAME.text);
+            type_table.Add('i');
+        } 
+    } (
+		COMMA NAME {
+        if (!symbol_table.Contains($NAME.text)) {
+            symbol_table.Add($NAME.text);
+            used_table.Add($NAME.text);
+            type_table.Add('i');
+        }
+    }
+	)* {
+        // Console.Error.WriteLine("parametros no final de parameters " + symbol_table.Count);       
     };
 
 main:
@@ -141,14 +187,14 @@ main:
         {
             if (!used_table.Contains(s))
             {                
-                Console.Error.WriteLine("\nERROR - variable not used: '" + s + "'\n");             
-                ////System.Environment.Exit(1);
+                Console.Error.WriteLine("ERROR - variable not used: '" + s + "'");             
+                // System.Environment.Exit(1);
             }
         }        
 
         System.Console.WriteLine("    return");
         System.Console.WriteLine(".limit stack " + stack_max); 
-              
+
         if (symbol_table.Count > 0) {
             System.Console.WriteLine(".limit locals " + symbol_table.Count);
         }    
@@ -156,15 +202,15 @@ main:
         System.Console.WriteLine(".end method");
         System.Console.Write("\n; symbol_table: ");
         foreach (string s in symbol_table) {
-             System.Console.Write(s + " ");
+            System.Console.Write(s + " ");
         }
         System.Console.Write("\n; type_table: ");
         foreach (char c in type_table) {
-             System.Console.Write(c + " ");
+            System.Console.Write(c + " ");
         }        
         System.Console.Write("\n; used_table: ");
         foreach (string s in used_table) {
-             System.Console.Write(s + " ");
+            System.Console.Write(s + " ");
         }
     };
 
@@ -446,7 +492,7 @@ factor
         } else if (type == 's') {
             Emit("aload " + index, 1);
             $type = 's';
-         } else if (type == 'a') {
+        } else if (type == 'a') {
             Emit("aload " + index, 1);
             $type = 'a';
         } else {
@@ -473,7 +519,7 @@ factor
                 Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);
                 
             } else {
-                Emit("aload " + index, -1);        
+                Emit("aload " + index, 1);        
             }
         }        
     } DOT LENGTH {       
@@ -489,7 +535,7 @@ factor
             if (type != 'a') {
                 Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);
             } else {
-                Emit("aload " + index, -1);
+                Emit("aload " + index, 1);
             }
         }
     } OP_BRA expression CL_BRA {   
@@ -498,10 +544,34 @@ factor
     };
 
 st_call:
-	NAME OP_PAR CL_PAR {
-        if (!functions_list.Contains($NAME.text)) {
-            Console.Error.WriteLine("# error: function '" + $NAME.text + "' was never declared - line " + $NAME.line);
-        } else {
-            Emit("invokestatic Test/" + $NAME.text + "()V\n", 0);
+	NAME OP_PAR (arguments)? {
+        for (int i = 0; i < arguments_count; i++) {
+            func_modifier += "I";
         }        
+        
+        string function_name = $NAME.text + "(" + func_modifier + ")V";
+        arguments_count = 0;
+        func_modifier = "";
+    } CL_PAR {
+        if (!functions_list.Contains(function_name)) {
+            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared - line " + $NAME.line);
+        } else {
+            Emit("invokestatic Test/" + function_name + "\n", 0);
+        }
     };
+
+arguments:
+	e1 = expression {        
+        symbol_table.Add($e1.text);
+        used_table.Add($e1.text);
+        type_table.Add('i');        
+
+        arguments_count++;
+    } (
+		COMMA e2 = expression {        
+            symbol_table.Add($e2.text);
+            used_table.Add($e2.text);
+            type_table.Add('i');
+            arguments_count++;
+        }
+	)*;

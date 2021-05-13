@@ -1,14 +1,6 @@
-def cube() {
-    n = 4
-    print(n * n * n)    
+def product(a, b) {
+    c = a * b
+    print(c)    
 }
 
-def kek() {
-    n = 3
-    print(n * n * n)    
-}
-
-n = "abc"
-cube()
-kek()
-print(n)
+product(4, 5)
