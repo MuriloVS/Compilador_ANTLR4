@@ -8,98 +8,73 @@
     return
 .end method
 
-.method public static square(I)V
-
-    iload 0
-    iload 0
-    imul
-    istore 1
-
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    ldc "The square is "
-    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    iload 1
-    invokevirtual java/io/PrintStream/print(I)V
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    invokevirtual java/io/PrintStream/println()V
+.method public static fw()V
 
     return
-.limit stack 2
+.limit stack 0
+.end method
+
+; symbol_table: 
+; type_table: 
+; used_table: 
+
+.method public static fx(I)V
+
+    return
+.limit stack 0
+.limit locals 1
+.end method
+
+; symbol_table: a 
+; type_table: i 
+; used_table: a 
+
+.method public static fy(II)V
+
+    return
+.limit stack 0
 .limit locals 2
 .end method
 
-; symbol_table: x y 
+; symbol_table: b c 
 ; type_table: i i 
-; used_table: x y 
+; used_table: b c 
 
-.method public static check(III)V
-
-    iload 0
-    iload 1
-    iadd
-    iload 2
-    iadd
-    iload 0
-    iload 1
-    imul
-    iload 2
-    imul
-    if_icmpne NOT_IF_0
-    ldc "equal to"
-    astore 3
-
-    goto END_ELSE_0
-NOT_IF_0:
-    ldc "different from"
-    astore 3
-
-END_ELSE_0:
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    ldc "The sum is "
-    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    aload 3
-    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    ldc " the product"
-    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    invokevirtual java/io/PrintStream/println()V
+.method public static fz(I)V
 
     return
-.limit stack 7
-.limit locals 4
+.limit stack 0
+.limit locals 1
 .end method
 
-; symbol_table: x y z msg 
-; type_table: i i i s 
-; used_table: x y z msg 
+; symbol_table: d 
+; type_table: i 
+; used_table: d 
 
 .method public static main([Ljava/lang/String;)V
 
-    ldc "Summary:"
-    astore 0
-
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    aload 0
-    invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    invokevirtual java/io/PrintStream/println()V
-
-    ldc 8
-    invokestatic Test/square(I)V
-
+    ldc 1
+    ldc 1
+    ldc 2
     ldc 1
     ldc 2
     ldc 3
-    invokestatic Test/check(III)V
+    ldc "ab"
+    invokestatic Test/fx(I)V
+
+    ldc 1
+    ldc "ab"
+    invokestatic Test/fy(II)V
+
+    ldc "ab"
+    ldc 2
+    invokestatic Test/fy(II)V
 
     return
-.limit stack 4
-.limit locals 5
+.limit stack 11
+.limit locals 11
 .end method
 
-; symbol_table: y 8 1 2 3 
-; type_table: s i i i i 
-; used_table: y 8 1 2 3 
+; symbol_table: 1 1 2 1 2 3 "ab" 1 "ab" "ab" 2 
+; type_table: i i i i i i i i i i i 
+; used_table: 1 1 2 1 2 3 "ab" 1 "ab" "ab" 2 

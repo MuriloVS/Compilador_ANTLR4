@@ -34,6 +34,7 @@ grammar Exp;
     List<int> else_local = new List<int>();
 
     List<string> functions_list = new List<string>();
+    Dictionary<string, int> fun_list = new Dictionary<string, int>();
 
     void Emit(string s, int n)
     {
@@ -112,22 +113,20 @@ program:
 
 function:
 	DEF NAME OP_PAR (parameters)? {
-        // declarando duas vezes a mesma função
-        // Console.Error.WriteLine(symbol_table.Count);
-        if (functions_list.Contains($NAME.text)) {                
+        for (int i = 0; i < symbol_table.Count; i++) {
+            func_modifier += "I";
+        }
+        
+        string func_name = $NAME.text + "(" + func_modifier + ")V";
+
+        if (functions_list.Contains(func_name)) {                
             Console.Error.WriteLine("# error - function '" + $NAME.text + "' already declared - line " + $NAME.line);             
             // System.Environment.Exit(1);
-        } else {
-            for (int i = 0; i < symbol_table.Count; i++) {
-                func_modifier += "I";
-            }
-
-            string func_name = $NAME.text + "(" + func_modifier + ")V";
+        } else {            
             functions_list.Add(func_name);
-
-            System.Console.WriteLine(".method public static " + func_name+ "\n"); 
+            System.Console.WriteLine(".method public static " + func_name + "\n"); 
         }        
-    } CL_PAR OP_CUR (statement)+ CL_CUR {
+    } CL_PAR OP_CUR (statement)* CL_CUR {
         // limpar as tabelas aqui   
         System.Console.WriteLine("    return");
         System.Console.WriteLine(".limit stack " + stack_max);
@@ -166,18 +165,20 @@ parameters:
             symbol_table.Add($NAME.text);
             used_table.Add($NAME.text);
             type_table.Add('i');
-        } 
+        } else {
+            Console.Error.WriteLine("# error: parameter names must be unique - line " + $NAME.line);             
+        }
     } (
 		COMMA NAME {
         if (!symbol_table.Contains($NAME.text)) {
             symbol_table.Add($NAME.text);
             used_table.Add($NAME.text);
             type_table.Add('i');
+        } else {
+            Console.Error.WriteLine("# error: parameter names must be unique - line " + $NAME.line);             
         }
     }
-	)* {
-        // Console.Error.WriteLine("parametros no final de parameters " + symbol_table.Count);       
-    };
+	)*;
 
 main:
 	{
@@ -554,7 +555,7 @@ st_call:
         func_modifier = "";
     } CL_PAR {
         if (!functions_list.Contains(function_name)) {
-            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared - line " + $NAME.line);
+            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of parameters - line " + $NAME.line);
         } else {
             Emit("invokestatic Test/" + function_name + "\n", 0);
         }
