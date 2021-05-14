@@ -128,7 +128,9 @@ public class ExpParser extends Parser {
 	    List<int> else_local = new List<int>();
 
 	    List<string> functions_list = new List<string>();
-	    Dictionary<string, int> fun_list = new Dictionary<string, int>();
+
+	    bool has_error = false;
+
 
 	    void Emit(string s, int n)
 	    {
@@ -268,7 +270,7 @@ public class ExpParser extends Parser {
 
 			        if (functions_list.Contains(func_name)) {                
 			            Console.Error.WriteLine("# error - function '" + (((FunctionContext)_localctx).NAME!=null?((FunctionContext)_localctx).NAME.getText():null) + "' already declared - line " + (((FunctionContext)_localctx).NAME!=null?((FunctionContext)_localctx).NAME.getLine():0));             
-			            // System.Environment.Exit(1);
+			            has_error = true;
 			        } else {            
 			            functions_list.Add(func_name);
 			            System.Console.WriteLine(".method public static " + func_name + "\n"); 
@@ -370,7 +372,8 @@ public class ExpParser extends Parser {
 			            used_table.Add((((ParametersContext)_localctx).NAME!=null?((ParametersContext)_localctx).NAME.getText():null));
 			            type_table.Add('i');
 			        } else {
-			            Console.Error.WriteLine("# error: parameter names must be unique - line " + (((ParametersContext)_localctx).NAME!=null?((ParametersContext)_localctx).NAME.getLine():0));             
+			            Console.Error.WriteLine("# error: parameter names must be unique - line " + (((ParametersContext)_localctx).NAME!=null?((ParametersContext)_localctx).NAME.getLine():0));    
+			            has_error = true;         
 			        }
 			    
 			setState(74);
@@ -389,7 +392,8 @@ public class ExpParser extends Parser {
 				            used_table.Add((((ParametersContext)_localctx).NAME!=null?((ParametersContext)_localctx).NAME.getText():null));
 				            type_table.Add('i');
 				        } else {
-				            Console.Error.WriteLine("# error: parameter names must be unique - line " + (((ParametersContext)_localctx).NAME!=null?((ParametersContext)_localctx).NAME.getLine():0));             
+				            Console.Error.WriteLine("# error: parameter names must be unique - line " + (((ParametersContext)_localctx).NAME!=null?((ParametersContext)_localctx).NAME.getLine():0)); 
+				            has_error = true;            
 				        }
 				    
 				}
@@ -454,7 +458,7 @@ public class ExpParser extends Parser {
 			            if (!used_table.Contains(s))
 			            {                
 			                Console.Error.WriteLine("ERROR - variable not used: '" + s + "'");             
-			                // System.Environment.Exit(1);
+			                has_error = true;
 			            }
 			        }        
 
@@ -477,6 +481,10 @@ public class ExpParser extends Parser {
 			        System.Console.Write("\n; used_table: ");
 			        foreach (string s in used_table) {
 			            System.Console.Write(s + " ");
+			        }
+
+			        if (has_error) {
+			            System.Environment.Exit(1);
 			        }
 			    
 			}
@@ -665,10 +673,9 @@ public class ExpParser extends Parser {
 			        } else if (((St_printContext)_localctx).e1.type == 'a') {            
 			            Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
 			            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
-			        } else {
-			            Console.Error.WriteLine("teste: " + ((St_printContext)_localctx).e1.type);            
+			        } else {            
 			            Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
-			            //System.Environment.Exit(1);
+			            has_error = true;
 			        }
 			    
 			setState(109);
@@ -691,7 +698,7 @@ public class ExpParser extends Parser {
 				            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
 				        } else {
 				            Console.Error.WriteLine("\nERROR - Type error in 'e2'.\n");         
-				            //System.Environment.Exit(1);
+				            has_error = true;
 				        }
 				    
 				}
@@ -921,8 +928,8 @@ public class ExpParser extends Parser {
 			match(BREAK);
 
 			        if (!inside_while) {
-			            Console.Error.WriteLine("\nERROR - Trying to use 'break' outside a loop.\n");         
-			            //System.Environment.Exit(1);
+			            Console.Error.WriteLine("# error: trying to use 'break' outside a loop.");         
+			            has_error = true;
 			        }
 			        
 			        Emit("goto END_WHILE_" +  while_break_continue, 0);
@@ -958,8 +965,8 @@ public class ExpParser extends Parser {
 			match(CONTINUE);
 
 			        if (!inside_while) {
-			            Console.Error.WriteLine("ERROR - Trying to use 'continue' outside a loop.\n");         
-			            //System.Environment.Exit(1);
+			            Console.Error.WriteLine("# error: trying to use 'continue' outside a loop.");         
+			            has_error = true;
 			        }
 
 			        Emit("goto BEGIN_WHILE_" + while_break_continue, 0);
@@ -1016,7 +1023,7 @@ public class ExpParser extends Parser {
 			            Emit("astore " + index + "\n", 1);            
 			        } else {
 			            Console.Error.WriteLine("# error: '" + (((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getText():null) + "' is already declared - line " + (((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getLine():0));         
-			            //System.Environment.Exit(1);
+			            has_error = true;
 			        }        
 			    
 			}
@@ -1058,8 +1065,8 @@ public class ExpParser extends Parser {
 			((St_array_pushContext)_localctx).NAME = match(NAME);
 			   
 			        if (!symbol_table.Contains((((St_array_pushContext)_localctx).NAME!=null?((St_array_pushContext)_localctx).NAME.getText():null))) {
-			            Console.Error.WriteLine("\nERROR - Variable does not exist - 'st_array_push' expression.\n");         
-			            //System.Environment.Exit(1);
+			            Console.Error.WriteLine("# error: variable '" + (((St_array_pushContext)_localctx).NAME!=null?((St_array_pushContext)_localctx).NAME.getText():null) + "' does not exist - line " + (((St_array_pushContext)_localctx).NAME!=null?((St_array_pushContext)_localctx).NAME.getLine():0));         
+			            has_error = true;
 			        }
 
 			        if (!used_table.Contains((((St_array_pushContext)_localctx).NAME!=null?((St_array_pushContext)_localctx).NAME.getText():null))) {
@@ -1125,11 +1132,13 @@ public class ExpParser extends Parser {
 
 			        if (!symbol_table.Contains((((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null))) {
 			            Console.Error.WriteLine("# error: '" + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null) + "' not defined - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));
+			            has_error = true;
 			        } else {
 			            int index = symbol_table.IndexOf((((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null));
 			            char type = type_table[index];
 			            if (type != 'a') {
-			                Console.Error.WriteLine("# error: '" + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null) + "' is not array - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));                    
+			                Console.Error.WriteLine("# error: '" + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null) + "' is not array - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));  
+			                has_error = true;                  
 			            } else {
 			                Emit("aload " + index, -1);      
 			            }
@@ -1148,12 +1157,10 @@ public class ExpParser extends Parser {
 			              
 			        if (((St_array_setContext)_localctx).e1.type != 'i') {
 			            Console.Error.WriteLine("# error: array index must be integer - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));         
+			            has_error = true;
 			        } else if (((St_array_setContext)_localctx).e2.type != 'i') {
 			            Console.Error.WriteLine("# error: '" + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null) + "' is array - line " + (((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getLine():0));         
-			            //System.Environment.Exit(1);
-			        // } else if (((St_array_setContext)_localctx).e2.type != 'i') {
-			        //     Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
-			        //     //System.Environment.Exit(1);
+			            has_error = true;        
 			        }
 
 			        Emit("invokevirtual Array/set(II)V\n", -3);        
@@ -1208,23 +1215,24 @@ public class ExpParser extends Parser {
 
 			        if (type == 'a') {
 			            Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is integer - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));
+			            has_error = true;
 			        } else if (type == 'i') {
 			            if (((St_attibContext)_localctx).expression.type == type) {
 			                Emit("istore " + index + "\n", -1);
 			            } else {
 			                Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is integer - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));
-			                //System.Environment.Exit(1);
+			                has_error = true;
 			            }            
 			        } else if (type == 's') {
 			            if (((St_attibContext)_localctx).expression.type == type) {
 			                Emit("astore " + index + "\n", -1);
 			            } else {
 			                Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is string  - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));
-			                //System.Environment.Exit(1);
+			                has_error = true;
 			            }             
 			        } else {
 			            Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is array - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));         
-			            //System.Environment.Exit(1);
+			            has_error = true;
 			        }        
 			    
 			}
@@ -1287,7 +1295,7 @@ public class ExpParser extends Parser {
 
 			        if (((ComparisonContext)_localctx).e1.type != 'i' || ((ComparisonContext)_localctx).e2.type  != 'i') {
 			            Console.Error.WriteLine("# error: cannot mix types - comparison - line " + (((ComparisonContext)_localctx).op!=null?((ComparisonContext)_localctx).op.getLine():0));         
-			            //System.Environment.Exit(1);
+			            has_error = true;
 			        }
 			        if ((((ComparisonContext)_localctx).op!=null?((ComparisonContext)_localctx).op.getType():0) == EQ) {            
 			            System.Console.Write("    if_icmpne ");          
@@ -1372,7 +1380,7 @@ public class ExpParser extends Parser {
 
 				        if (((ExpressionContext)_localctx).t1.type != 'i' || ((ExpressionContext)_localctx).t2.type != 'i') {
 				            Console.Error.WriteLine("# error: cannot mix types - plus or minus - line " + (((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getLine():0));         
-				            ////System.Environment.Exit(1);
+				            has_error = true;
 				        }
 				        if ((((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getType():0) == PLUS ) {
 				            Emit("iadd", -1);
@@ -1462,7 +1470,7 @@ public class ExpParser extends Parser {
 
 				        if (((TermContext)_localctx).f1.type != 'i' || ((TermContext)_localctx).f2.type != 'i') {
 				            Console.Error.WriteLine("# error: cannot mix types - times, over or rem - line " + (((TermContext)_localctx).op!=null?((TermContext)_localctx).op.getLine():0));         
-				            //System.Environment.Exit(1);
+				            has_error = true;
 				        }
 				        if ((((TermContext)_localctx).op!=null?((TermContext)_localctx).op.getType():0) == TIMES ) {
 				            Emit("imul", -1);
@@ -1570,31 +1578,33 @@ public class ExpParser extends Parser {
 				((FactorContext)_localctx).NAME = match(NAME);
 
 				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
-				            Console.Error.WriteLine("\nERROR - variable not found: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "'\n");         
-				            //System.Environment.Exit(1);
-				        }       
+				            Console.Error.WriteLine("# error: variable not declared: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "'");         
+				            has_error = true;
+				        } else {
+				            // vai auxiliar no controle das variáveis usadas        
+				            if (!used_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
+				                used_table.Add((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null)); 
+				            }
 
-				        // vai auxiliar no controle das variáveis usadas        
-				        if (!used_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
-				            used_table.Add((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null)); 
+				            int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null));            
+				            char type = type_table[index];
+
+				            if (type == 'i') {
+				                Emit("iload " + index, 1);
+				                ((FactorContext)_localctx).type =  'i';
+				            } else if (type == 's') {
+				                Emit("aload " + index, 1);
+				                ((FactorContext)_localctx).type =  's';
+				            } else if (type == 'a') {
+				                Emit("aload " + index, 1);
+				                ((FactorContext)_localctx).type =  'a';
+				            } else {
+				                Console.Error.WriteLine("# error: type error in factor - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));         
+				                has_error = true;
+				            }
 				        }
 
-				        int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null));            
-				        char type = type_table[index];
-
-				        if (type == 'i') {
-				            Emit("iload " + index, 1);
-				            ((FactorContext)_localctx).type =  'i';
-				        } else if (type == 's') {
-				            Emit("aload " + index, 1);
-				            ((FactorContext)_localctx).type =  's';
-				        } else if (type == 'a') {
-				            Emit("aload " + index, 1);
-				            ((FactorContext)_localctx).type =  'a';
-				        } else {
-				            Console.Error.WriteLine("\nERROR - Type error in factor NAME.\n");         
-				            // System.Environment.Exit(1);
-				        }       
+				        
 				    
 				}
 				break;
@@ -1636,13 +1646,14 @@ public class ExpParser extends Parser {
 
 				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
 				            Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' not defined - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				            has_error = true;
 				        } else {
 				            int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null));
 				            char type = type_table[index];
 
 				            if (type != 'a') {
 				                Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' is not array - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
-				                
+				                has_error = true;
 				            } else {
 				                Emit("aload " + index, 1);        
 				            }
@@ -1666,11 +1677,13 @@ public class ExpParser extends Parser {
 
 				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
 				            Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' not defined - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				            has_error = true;
 				        } else {
 				            int index = symbol_table.IndexOf((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null));
 				            char type = type_table[index];
 				            if (type != 'a') {
 				                Console.Error.WriteLine("# error: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' is not array - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				                has_error = true;
 				            } else {
 				                Emit("aload " + index, 1);
 				            }
@@ -1749,7 +1762,8 @@ public class ExpParser extends Parser {
 			match(CL_PAR);
 
 			        if (!functions_list.Contains(function_name)) {
-			            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of parameters - line " + (((St_callContext)_localctx).NAME!=null?((St_callContext)_localctx).NAME.getLine():0));
+			            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + (((St_callContext)_localctx).NAME!=null?((St_callContext)_localctx).NAME.getLine():0));
+			            has_error = true;
 			        } else {
 			            Emit("invokestatic Test/" + function_name + "\n", 0);
 			        }
@@ -1795,11 +1809,15 @@ public class ExpParser extends Parser {
 			{
 			setState(258);
 			((ArgumentsContext)_localctx).e1 = expression();
-			        
-			        symbol_table.Add((((ArgumentsContext)_localctx).e1!=null?_input.getText(((ArgumentsContext)_localctx).e1.start,((ArgumentsContext)_localctx).e1.stop):null));
-			        used_table.Add((((ArgumentsContext)_localctx).e1!=null?_input.getText(((ArgumentsContext)_localctx).e1.start,((ArgumentsContext)_localctx).e1.stop):null));
-			        type_table.Add('i');        
-
+			 
+			        if (((ArgumentsContext)_localctx).e1.type != 'i') {
+			            Console.Error.WriteLine("# error: all arguments must be integer");
+			            has_error = true;
+			        } else {
+			            symbol_table.Add((((ArgumentsContext)_localctx).e1!=null?_input.getText(((ArgumentsContext)_localctx).e1.start,((ArgumentsContext)_localctx).e1.stop):null));
+			            used_table.Add((((ArgumentsContext)_localctx).e1!=null?_input.getText(((ArgumentsContext)_localctx).e1.start,((ArgumentsContext)_localctx).e1.stop):null));
+			            type_table.Add('i');        
+			        }
 			        arguments_count++;
 			    
 			setState(266);
@@ -1813,9 +1831,14 @@ public class ExpParser extends Parser {
 				setState(261);
 				((ArgumentsContext)_localctx).e2 = expression();
 				        
-				            symbol_table.Add((((ArgumentsContext)_localctx).e2!=null?_input.getText(((ArgumentsContext)_localctx).e2.start,((ArgumentsContext)_localctx).e2.stop):null));
-				            used_table.Add((((ArgumentsContext)_localctx).e2!=null?_input.getText(((ArgumentsContext)_localctx).e2.start,((ArgumentsContext)_localctx).e2.stop):null));
-				            type_table.Add('i');
+				            if (((ArgumentsContext)_localctx).e2.type != 'i') {
+				                Console.Error.WriteLine("# error: all arguments must be integer");
+				                has_error = true;
+				            } else {
+				                symbol_table.Add((((ArgumentsContext)_localctx).e1!=null?_input.getText(((ArgumentsContext)_localctx).e1.start,((ArgumentsContext)_localctx).e1.stop):null));
+				                used_table.Add((((ArgumentsContext)_localctx).e1!=null?_input.getText(((ArgumentsContext)_localctx).e1.start,((ArgumentsContext)_localctx).e1.stop):null));
+				                type_table.Add('i');        
+				            }
 				            arguments_count++;
 				        
 				}

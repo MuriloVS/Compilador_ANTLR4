@@ -118,7 +118,9 @@ public partial class ExpParser : Parser {
 	    List<int> else_local = new List<int>();
 
 	    List<string> functions_list = new List<string>();
-	    Dictionary<string, int> fun_list = new Dictionary<string, int>();
+
+	    bool has_error = false;
+
 
 	    void Emit(string s, int n)
 	    {
@@ -265,7 +267,7 @@ public partial class ExpParser : Parser {
 
 			        if (functions_list.Contains(func_name)) {                
 			            Console.Error.WriteLine("# error - function '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' already declared - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));             
-			            // System.Environment.Exit(1);
+			            has_error = true;
 			        } else {            
 			            functions_list.Add(func_name);
 			            System.Console.WriteLine(".method public static " + func_name + "\n"); 
@@ -369,7 +371,8 @@ public partial class ExpParser : Parser {
 			            used_table.Add((_localctx._NAME!=null?_localctx._NAME.Text:null));
 			            type_table.Add('i');
 			        } else {
-			            Console.Error.WriteLine("# error: parameter names must be unique - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));             
+			            Console.Error.WriteLine("# error: parameter names must be unique - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));    
+			            has_error = true;         
 			        }
 			    
 			State = 74;
@@ -388,7 +391,8 @@ public partial class ExpParser : Parser {
 				            used_table.Add((_localctx._NAME!=null?_localctx._NAME.Text:null));
 				            type_table.Add('i');
 				        } else {
-				            Console.Error.WriteLine("# error: parameter names must be unique - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));             
+				            Console.Error.WriteLine("# error: parameter names must be unique - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0)); 
+				            has_error = true;            
 				        }
 				    
 				}
@@ -455,7 +459,7 @@ public partial class ExpParser : Parser {
 			            if (!used_table.Contains(s))
 			            {                
 			                Console.Error.WriteLine("ERROR - variable not used: '" + s + "'");             
-			                // System.Environment.Exit(1);
+			                has_error = true;
 			            }
 			        }        
 
@@ -478,6 +482,10 @@ public partial class ExpParser : Parser {
 			        System.Console.Write("\n; used_table: ");
 			        foreach (string s in used_table) {
 			            System.Console.Write(s + " ");
+			        }
+
+			        if (has_error) {
+			            System.Environment.Exit(1);
 			        }
 			    
 			}
@@ -670,10 +678,9 @@ public partial class ExpParser : Parser {
 			        } else if (_localctx.e1.type == 'a') {            
 			            Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
 			            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
-			        } else {
-			            Console.Error.WriteLine("teste: " + _localctx.e1.type);            
+			        } else {            
 			            Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
-			            //System.Environment.Exit(1);
+			            has_error = true;
 			        }
 			    
 			State = 109;
@@ -696,7 +703,7 @@ public partial class ExpParser : Parser {
 				            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
 				        } else {
 				            Console.Error.WriteLine("\nERROR - Type error in 'e2'.\n");         
-				            //System.Environment.Exit(1);
+				            has_error = true;
 				        }
 				    
 				}
@@ -932,8 +939,8 @@ public partial class ExpParser : Parser {
 			Match(BREAK);
 
 			        if (!inside_while) {
-			            Console.Error.WriteLine("\nERROR - Trying to use 'break' outside a loop.\n");         
-			            //System.Environment.Exit(1);
+			            Console.Error.WriteLine("# error: trying to use 'break' outside a loop.");         
+			            has_error = true;
 			        }
 			        
 			        Emit("goto END_WHILE_" +  while_break_continue, 0);
@@ -971,8 +978,8 @@ public partial class ExpParser : Parser {
 			Match(CONTINUE);
 
 			        if (!inside_while) {
-			            Console.Error.WriteLine("ERROR - Trying to use 'continue' outside a loop.\n");         
-			            //System.Environment.Exit(1);
+			            Console.Error.WriteLine("# error: trying to use 'continue' outside a loop.");         
+			            has_error = true;
 			        }
 
 			        Emit("goto BEGIN_WHILE_" + while_break_continue, 0);
@@ -1031,7 +1038,7 @@ public partial class ExpParser : Parser {
 			            Emit("astore " + index + "\n", 1);            
 			        } else {
 			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is already declared - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
-			            //System.Environment.Exit(1);
+			            has_error = true;
 			        }        
 			    
 			}
@@ -1075,8 +1082,8 @@ public partial class ExpParser : Parser {
 			_localctx._NAME = Match(NAME);
 			   
 			        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
-			            Console.Error.WriteLine("\nERROR - Variable does not exist - 'st_array_push' expression.\n");         
-			            //System.Environment.Exit(1);
+			            Console.Error.WriteLine("# error: variable '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' does not exist - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
+			            has_error = true;
 			        }
 
 			        if (!used_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
@@ -1144,11 +1151,13 @@ public partial class ExpParser : Parser {
 
 			        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
 			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' not defined - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+			            has_error = true;
 			        } else {
 			            int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
 			            char type = type_table[index];
 			            if (type != 'a') {
-			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is not array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));                    
+			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is not array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));  
+			                has_error = true;                  
 			            } else {
 			                Emit("aload " + index, -1);      
 			            }
@@ -1167,12 +1176,10 @@ public partial class ExpParser : Parser {
 			              
 			        if (_localctx.e1.type != 'i') {
 			            Console.Error.WriteLine("# error: array index must be integer - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
+			            has_error = true;
 			        } else if (_localctx.e2.type != 'i') {
 			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
-			            //System.Environment.Exit(1);
-			        // } else if (_localctx.e2.type != 'i') {
-			        //     Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
-			        //     //System.Environment.Exit(1);
+			            has_error = true;        
 			        }
 
 			        Emit("invokevirtual Array/set(II)V\n", -3);        
@@ -1229,23 +1236,24 @@ public partial class ExpParser : Parser {
 
 			        if (type == 'a') {
 			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is integer - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+			            has_error = true;
 			        } else if (type == 'i') {
 			            if (_localctx._expression.type == type) {
 			                Emit("istore " + index + "\n", -1);
 			            } else {
 			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is integer - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
-			                //System.Environment.Exit(1);
+			                has_error = true;
 			            }            
 			        } else if (type == 's') {
 			            if (_localctx._expression.type == type) {
 			                Emit("astore " + index + "\n", -1);
 			            } else {
 			                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is string  - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
-			                //System.Environment.Exit(1);
+			                has_error = true;
 			            }             
 			        } else {
 			            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
-			            //System.Environment.Exit(1);
+			            has_error = true;
 			        }        
 			    
 			}
@@ -1309,7 +1317,7 @@ public partial class ExpParser : Parser {
 
 			        if (_localctx.e1.type != 'i' || _localctx.e2.type  != 'i') {
 			            Console.Error.WriteLine("# error: cannot mix types - comparison - line " + (_localctx.op!=null?_localctx.op.Line:0));         
-			            //System.Environment.Exit(1);
+			            has_error = true;
 			        }
 			        if ((_localctx.op!=null?_localctx.op.Type:0) == EQ) {            
 			            System.Console.Write("    if_icmpne ");          
@@ -1395,7 +1403,7 @@ public partial class ExpParser : Parser {
 
 				        if (_localctx.t1.type != 'i' || _localctx.t2.type != 'i') {
 				            Console.Error.WriteLine("# error: cannot mix types - plus or minus - line " + (_localctx.op!=null?_localctx.op.Line:0));         
-				            ////System.Environment.Exit(1);
+				            has_error = true;
 				        }
 				        if ((_localctx.op!=null?_localctx.op.Type:0) == PLUS ) {
 				            Emit("iadd", -1);
@@ -1486,7 +1494,7 @@ public partial class ExpParser : Parser {
 
 				        if (_localctx.f1.type != 'i' || _localctx.f2.type != 'i') {
 				            Console.Error.WriteLine("# error: cannot mix types - times, over or rem - line " + (_localctx.op!=null?_localctx.op.Line:0));         
-				            //System.Environment.Exit(1);
+				            has_error = true;
 				        }
 				        if ((_localctx.op!=null?_localctx.op.Type:0) == TIMES ) {
 				            Emit("imul", -1);
@@ -1596,31 +1604,33 @@ public partial class ExpParser : Parser {
 				_localctx._NAME = Match(NAME);
 
 				        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
-				            Console.Error.WriteLine("\nERROR - variable not found: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "'\n");         
-				            //System.Environment.Exit(1);
-				        }       
+				            Console.Error.WriteLine("# error: variable not declared: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "'");         
+				            has_error = true;
+				        } else {
+				            // vai auxiliar no controle das variáveis usadas        
+				            if (!used_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
+				                used_table.Add((_localctx._NAME!=null?_localctx._NAME.Text:null)); 
+				            }
 
-				        // vai auxiliar no controle das variáveis usadas        
-				        if (!used_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
-				            used_table.Add((_localctx._NAME!=null?_localctx._NAME.Text:null)); 
+				            int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));            
+				            char type = type_table[index];
+
+				            if (type == 'i') {
+				                Emit("iload " + index, 1);
+				                _localctx.type =  'i';
+				            } else if (type == 's') {
+				                Emit("aload " + index, 1);
+				                _localctx.type =  's';
+				            } else if (type == 'a') {
+				                Emit("aload " + index, 1);
+				                _localctx.type =  'a';
+				            } else {
+				                Console.Error.WriteLine("# error: type error in factor - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));         
+				                has_error = true;
+				            }
 				        }
 
-				        int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));            
-				        char type = type_table[index];
-
-				        if (type == 'i') {
-				            Emit("iload " + index, 1);
-				            _localctx.type =  'i';
-				        } else if (type == 's') {
-				            Emit("aload " + index, 1);
-				            _localctx.type =  's';
-				        } else if (type == 'a') {
-				            Emit("aload " + index, 1);
-				            _localctx.type =  'a';
-				        } else {
-				            Console.Error.WriteLine("\nERROR - Type error in factor NAME.\n");         
-				            // System.Environment.Exit(1);
-				        }       
+				        
 				    
 				}
 				break;
@@ -1662,13 +1672,14 @@ public partial class ExpParser : Parser {
 
 				        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
 				            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' not defined - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+				            has_error = true;
 				        } else {
 				            int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
 				            char type = type_table[index];
 
 				            if (type != 'a') {
 				                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is not array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
-				                
+				                has_error = true;
 				            } else {
 				                Emit("aload " + index, 1);        
 				            }
@@ -1692,11 +1703,13 @@ public partial class ExpParser : Parser {
 
 				        if (!symbol_table.Contains((_localctx._NAME!=null?_localctx._NAME.Text:null))) {
 				            Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' not defined - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+				            has_error = true;
 				        } else {
 				            int index = symbol_table.IndexOf((_localctx._NAME!=null?_localctx._NAME.Text:null));
 				            char type = type_table[index];
 				            if (type != 'a') {
 				                Console.Error.WriteLine("# error: '" + (_localctx._NAME!=null?_localctx._NAME.Text:null) + "' is not array - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+				                has_error = true;
 				            } else {
 				                Emit("aload " + index, 1);
 				            }
@@ -1777,7 +1790,8 @@ public partial class ExpParser : Parser {
 			Match(CL_PAR);
 
 			        if (!functions_list.Contains(function_name)) {
-			            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of parameters - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+			            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + (_localctx._NAME!=null?_localctx._NAME.Line:0));
+			            has_error = true;
 			        } else {
 			            Emit("invokestatic Test/" + function_name + "\n", 0);
 			        }
@@ -1825,11 +1839,15 @@ public partial class ExpParser : Parser {
 			{
 			State = 258;
 			_localctx.e1 = expression();
-			        
-			        symbol_table.Add((_localctx.e1!=null?TokenStream.GetText(_localctx.e1.Start,_localctx.e1.Stop):null));
-			        used_table.Add((_localctx.e1!=null?TokenStream.GetText(_localctx.e1.Start,_localctx.e1.Stop):null));
-			        type_table.Add('i');        
-
+			 
+			        if (_localctx.e1.type != 'i') {
+			            Console.Error.WriteLine("# error: all arguments must be integer");
+			            has_error = true;
+			        } else {
+			            symbol_table.Add((_localctx.e1!=null?TokenStream.GetText(_localctx.e1.Start,_localctx.e1.Stop):null));
+			            used_table.Add((_localctx.e1!=null?TokenStream.GetText(_localctx.e1.Start,_localctx.e1.Stop):null));
+			            type_table.Add('i');        
+			        }
 			        arguments_count++;
 			    
 			State = 266;
@@ -1843,9 +1861,14 @@ public partial class ExpParser : Parser {
 				State = 261;
 				_localctx.e2 = expression();
 				        
-				            symbol_table.Add((_localctx.e2!=null?TokenStream.GetText(_localctx.e2.Start,_localctx.e2.Stop):null));
-				            used_table.Add((_localctx.e2!=null?TokenStream.GetText(_localctx.e2.Start,_localctx.e2.Stop):null));
-				            type_table.Add('i');
+				            if (_localctx.e2.type != 'i') {
+				                Console.Error.WriteLine("# error: all arguments must be integer");
+				                has_error = true;
+				            } else {
+				                symbol_table.Add((_localctx.e1!=null?TokenStream.GetText(_localctx.e1.Start,_localctx.e1.Stop):null));
+				                used_table.Add((_localctx.e1!=null?TokenStream.GetText(_localctx.e1.Start,_localctx.e1.Stop):null));
+				                type_table.Add('i');        
+				            }
 				            arguments_count++;
 				        
 				}

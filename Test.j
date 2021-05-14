@@ -72,9 +72,9 @@
 
     return
 .limit stack 11
-.limit locals 11
+.limit locals 8
 .end method
 
-; symbol_table: 1 1 2 1 2 3 "ab" 1 "ab" "ab" 2 
-; type_table: i i i i i i i i i i i 
-; used_table: 1 1 2 1 2 3 "ab" 1 "ab" "ab" 2 
+; symbol_table: 1 1 1 1 1 1 1 "ab" 
+; type_table: i i i i i i i i 
+; used_table: 1 1 1 1 1 1 1 "ab" 

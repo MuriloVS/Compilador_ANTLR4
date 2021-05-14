@@ -34,7 +34,9 @@ grammar Exp;
     List<int> else_local = new List<int>();
 
     List<string> functions_list = new List<string>();
-    Dictionary<string, int> fun_list = new Dictionary<string, int>();
+
+    bool has_error = false;
+
 
     void Emit(string s, int n)
     {
@@ -121,7 +123,7 @@ function:
 
         if (functions_list.Contains(func_name)) {                
             Console.Error.WriteLine("# error - function '" + $NAME.text + "' already declared - line " + $NAME.line);             
-            // System.Environment.Exit(1);
+            has_error = true;
         } else {            
             functions_list.Add(func_name);
             System.Console.WriteLine(".method public static " + func_name + "\n"); 
@@ -166,7 +168,8 @@ parameters:
             used_table.Add($NAME.text);
             type_table.Add('i');
         } else {
-            Console.Error.WriteLine("# error: parameter names must be unique - line " + $NAME.line);             
+            Console.Error.WriteLine("# error: parameter names must be unique - line " + $NAME.line);    
+            has_error = true;         
         }
     } (
 		COMMA NAME {
@@ -175,7 +178,8 @@ parameters:
             used_table.Add($NAME.text);
             type_table.Add('i');
         } else {
-            Console.Error.WriteLine("# error: parameter names must be unique - line " + $NAME.line);             
+            Console.Error.WriteLine("# error: parameter names must be unique - line " + $NAME.line); 
+            has_error = true;            
         }
     }
 	)*;
@@ -189,7 +193,7 @@ main:
             if (!used_table.Contains(s))
             {                
                 Console.Error.WriteLine("ERROR - variable not used: '" + s + "'");             
-                // System.Environment.Exit(1);
+                has_error = true;
             }
         }        
 
@@ -212,6 +216,10 @@ main:
         System.Console.Write("\n; used_table: ");
         foreach (string s in used_table) {
             System.Console.Write(s + " ");
+        }
+
+        if (has_error) {
+            System.Environment.Exit(1);
         }
     };
 
@@ -238,10 +246,9 @@ st_print:
         } else if ($e1.type == 'a') {            
             Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
-        } else {
-            Console.Error.WriteLine("teste: " + $e1.type);            
+        } else {            
             Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
-            //System.Environment.Exit(1);
+            has_error = true;
         }
     } (
 		COMMA {
@@ -253,7 +260,7 @@ st_print:
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
         } else {
             Console.Error.WriteLine("\nERROR - Type error in 'e2'.\n");         
-            //System.Environment.Exit(1);
+            has_error = true;
         }
     }
 	)* CL_PAR {
@@ -291,8 +298,8 @@ st_while:
 st_break:
 	BREAK {
         if (!inside_while) {
-            Console.Error.WriteLine("\nERROR - Trying to use 'break' outside a loop.\n");         
-            //System.Environment.Exit(1);
+            Console.Error.WriteLine("# error: trying to use 'break' outside a loop.");         
+            has_error = true;
         }
         
         Emit("goto END_WHILE_" +  while_break_continue, 0);
@@ -301,8 +308,8 @@ st_break:
 st_continue:
 	CONTINUE {
         if (!inside_while) {
-            Console.Error.WriteLine("ERROR - Trying to use 'continue' outside a loop.\n");         
-            //System.Environment.Exit(1);
+            Console.Error.WriteLine("# error: trying to use 'continue' outside a loop.");         
+            has_error = true;
         }
 
         Emit("goto BEGIN_WHILE_" + while_break_continue, 0);
@@ -322,15 +329,15 @@ st_array_new:
             Emit("astore " + index + "\n", 1);            
         } else {
             Console.Error.WriteLine("# error: '" + $NAME.text + "' is already declared - line " + $NAME.line);         
-            //System.Environment.Exit(1);
+            has_error = true;
         }        
     };
 
 st_array_push:
 	NAME {   
         if (!symbol_table.Contains($NAME.text)) {
-            Console.Error.WriteLine("\nERROR - Variable does not exist - 'st_array_push' expression.\n");         
-            //System.Environment.Exit(1);
+            Console.Error.WriteLine("# error: variable '" + $NAME.text + "' does not exist - line " + $NAME.line);         
+            has_error = true;
         }
 
         if (!used_table.Contains($NAME.text)) {
@@ -346,11 +353,13 @@ st_array_set:
 	NAME {
         if (!symbol_table.Contains($NAME.text)) {
             Console.Error.WriteLine("# error: '" + $NAME.text + "' not defined - line " + $NAME.line);
+            has_error = true;
         } else {
             int index = symbol_table.IndexOf($NAME.text);
             char type = type_table[index];
             if (type != 'a') {
-                Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);                    
+                Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);  
+                has_error = true;                  
             } else {
                 Emit("aload " + index, -1);      
             }
@@ -358,12 +367,10 @@ st_array_set:
     } OP_BRA e1 = expression CL_BRA ATTRIB e2 = expression {              
         if ($e1.type != 'i') {
             Console.Error.WriteLine("# error: array index must be integer - line " + $NAME.line);         
+            has_error = true;
         } else if ($e2.type != 'i') {
             Console.Error.WriteLine("# error: '" + $NAME.text + "' is array - line " + $NAME.line);         
-            //System.Environment.Exit(1);
-        // } else if ($e2.type != 'i') {
-        //     Console.Error.WriteLine("# error: cannot mix types - array element assignement");         
-        //     //System.Environment.Exit(1);
+            has_error = true;        
         }
 
         Emit("invokevirtual Array/set(II)V\n", -3);        
@@ -381,23 +388,24 @@ st_attib:
 
         if (type == 'a') {
             Console.Error.WriteLine("# error: '" + $NAME.text + "' is integer - line " + $NAME.line);
+            has_error = true;
         } else if (type == 'i') {
             if ($expression.type == type) {
                 Emit("istore " + index + "\n", -1);
             } else {
                 Console.Error.WriteLine("# error: '" + $NAME.text + "' is integer - line " + $NAME.line);
-                //System.Environment.Exit(1);
+                has_error = true;
             }            
         } else if (type == 's') {
             if ($expression.type == type) {
                 Emit("astore " + index + "\n", -1);
             } else {
                 Console.Error.WriteLine("# error: '" + $NAME.text + "' is string  - line " + $NAME.line);
-                //System.Environment.Exit(1);
+                has_error = true;
             }             
         } else {
             Console.Error.WriteLine("# error: '" + $NAME.text + "' is array - line " + $NAME.line);         
-            //System.Environment.Exit(1);
+            has_error = true;
         }        
     };
 
@@ -405,7 +413,7 @@ comparison:
 	e1 = expression op = (EQ | NE | GT | GE | LT | LE) e2 = expression {
         if ($e1.type != 'i' || $e2.type  != 'i') {
             Console.Error.WriteLine("# error: cannot mix types - comparison - line " + $op.line);         
-            //System.Environment.Exit(1);
+            has_error = true;
         }
         if ($op.type == EQ) {            
             System.Console.Write("    if_icmpne ");          
@@ -428,7 +436,7 @@ expression
 		op = (PLUS | MINUS) t2 = term {
         if ($t1.type != 'i' || $t2.type != 'i') {
             Console.Error.WriteLine("# error: cannot mix types - plus or minus - line " + $op.line);         
-            ////System.Environment.Exit(1);
+            has_error = true;
         }
         if ($op.type == PLUS ) {
             Emit("iadd", -1);
@@ -446,7 +454,7 @@ term
 		op = (TIMES | OVER | REM) f2 = factor {
         if ($f1.type != 'i' || $f2.type != 'i') {
             Console.Error.WriteLine("# error: cannot mix types - times, over or rem - line " + $op.line);         
-            //System.Environment.Exit(1);
+            has_error = true;
         }
         if ($op.type == TIMES ) {
             Emit("imul", -1);
@@ -475,31 +483,33 @@ factor
     }
 	| NAME {
         if (!symbol_table.Contains($NAME.text)) {
-            Console.Error.WriteLine("\nERROR - variable not found: '" + $NAME.text + "'\n");         
-            //System.Environment.Exit(1);
-        }       
+            Console.Error.WriteLine("# error: variable not declared: '" + $NAME.text + "'");         
+            has_error = true;
+        } else {
+            // vai auxiliar no controle das variáveis usadas        
+            if (!used_table.Contains($NAME.text)) {
+                used_table.Add($NAME.text); 
+            }
 
-        // vai auxiliar no controle das variáveis usadas        
-        if (!used_table.Contains($NAME.text)) {
-            used_table.Add($NAME.text); 
+            int index = symbol_table.IndexOf($NAME.text);            
+            char type = type_table[index];
+
+            if (type == 'i') {
+                Emit("iload " + index, 1);
+                $type = 'i';
+            } else if (type == 's') {
+                Emit("aload " + index, 1);
+                $type = 's';
+            } else if (type == 'a') {
+                Emit("aload " + index, 1);
+                $type = 'a';
+            } else {
+                Console.Error.WriteLine("# error: type error in factor - line " + $NAME.line);         
+                has_error = true;
+            }
         }
 
-        int index = symbol_table.IndexOf($NAME.text);            
-        char type = type_table[index];
-
-        if (type == 'i') {
-            Emit("iload " + index, 1);
-            $type = 'i';
-        } else if (type == 's') {
-            Emit("aload " + index, 1);
-            $type = 's';
-        } else if (type == 'a') {
-            Emit("aload " + index, 1);
-            $type = 'a';
-        } else {
-            Console.Error.WriteLine("\nERROR - Type error in factor NAME.\n");         
-            // System.Environment.Exit(1);
-        }       
+        
     }
 	| READ_INT OP_PAR CL_PAR {
         Emit("invokestatic Runtime/readInt()I", 1);
@@ -512,13 +522,14 @@ factor
 	| NAME {
         if (!symbol_table.Contains($NAME.text)) {
             Console.Error.WriteLine("# error: '" + $NAME.text + "' not defined - line " + $NAME.line);
+            has_error = true;
         } else {
             int index = symbol_table.IndexOf($NAME.text);
             char type = type_table[index];
 
             if (type != 'a') {
                 Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);
-                
+                has_error = true;
             } else {
                 Emit("aload " + index, 1);        
             }
@@ -530,11 +541,13 @@ factor
 	| NAME {
         if (!symbol_table.Contains($NAME.text)) {
             Console.Error.WriteLine("# error: '" + $NAME.text + "' not defined - line " + $NAME.line);
+            has_error = true;
         } else {
             int index = symbol_table.IndexOf($NAME.text);
             char type = type_table[index];
             if (type != 'a') {
                 Console.Error.WriteLine("# error: '" + $NAME.text + "' is not array - line " + $NAME.line);
+                has_error = true;
             } else {
                 Emit("aload " + index, 1);
             }
@@ -555,24 +568,34 @@ st_call:
         func_modifier = "";
     } CL_PAR {
         if (!functions_list.Contains(function_name)) {
-            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of parameters - line " + $NAME.line);
+            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + $NAME.line);
+            has_error = true;
         } else {
             Emit("invokestatic Test/" + function_name + "\n", 0);
         }
     };
 
 arguments:
-	e1 = expression {        
-        symbol_table.Add($e1.text);
-        used_table.Add($e1.text);
-        type_table.Add('i');        
-
+	e1 = expression { 
+        if ($e1.type != 'i') {
+            Console.Error.WriteLine("# error: all arguments must be integer");
+            has_error = true;
+        } else {
+            symbol_table.Add($e1.text);
+            used_table.Add($e1.text);
+            type_table.Add('i');        
+        }
         arguments_count++;
     } (
 		COMMA e2 = expression {        
-            symbol_table.Add($e2.text);
-            used_table.Add($e2.text);
-            type_table.Add('i');
+            if ($e2.type != 'i') {
+                Console.Error.WriteLine("# error: all arguments must be integer");
+                has_error = true;
+            } else {
+                symbol_table.Add($e1.text);
+                used_table.Add($e1.text);
+                type_table.Add('i');        
+            }
             arguments_count++;
         }
 	)*;
