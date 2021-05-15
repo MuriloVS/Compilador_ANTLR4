@@ -21,22 +21,16 @@ grammar Exp;
     int stack_curr = 0;
     
     int if_global = 0;
-    // int has_else = 0;
-    // int else_global = 0;
+    List<int> ifs = new List<int>();
+   
+    int while_global = 0;  
+    List<int> whiles = new List<int>();  
 
-    int while_break_continue = 0;
-    int while_global = 0;
-    bool inside_while = false;
-
-    int arguments_count = 0;
-    int parameters_count = 0;
-
-    List<int> else_local = new List<int>();
+    int arguments_count = 0;   
 
     List<string> functions_list = new List<string>();
 
     bool has_error = false;
-
 
     void Emit(string s, int n)
     {
@@ -192,7 +186,7 @@ main:
         {
             if (!used_table.Contains(s))
             {                
-                Console.Error.WriteLine("ERROR - variable not used: '" + s + "'");             
+                Console.Error.WriteLine("# error: variable not used: '" + s + "'");             
                 has_error = true;
             }
         }        
@@ -247,7 +241,7 @@ st_print:
             Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
         } else {            
-            Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
+            Console.Error.WriteLine("# error: type error in 'e1' expression.\n");         
             has_error = true;
         }
     } (
@@ -259,7 +253,7 @@ st_print:
         } else if ($e2.type == 's') {
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
         } else {
-            Console.Error.WriteLine("\nERROR - Type error in 'e2'.\n");         
+            Console.Error.WriteLine("# error: type error in 'e2' expression\n");         
             has_error = true;
         }
     }
@@ -281,38 +275,39 @@ st_if:
     };
 
 st_while:
-	WHILE {
-        inside_while = true;
-        int while_local = while_global;
-        while_break_continue = while_local;
-        while_global++;       
-        System.Console.WriteLine("\n    BEGIN_WHILE_" + while_local + ":\n");
+	WHILE {     
+        whiles.Add(while_global);
+        while_global++;    
+        
+        System.Console.WriteLine("\n    BEGIN_WHILE_" + whiles[whiles.Count - 1] + ":\n");        
     } comparison {
-        Emit("END_WHILE_" + while_local, 0); 
-    } OP_CUR (statement)+ CL_CUR {
-        Emit("goto BEGIN_WHILE_" + while_local, 0);
-        System.Console.WriteLine("\n    END_WHILE_" + while_local + ":\n");
-        inside_while = false;
-    };
+        Emit("END_WHILE_" + whiles[whiles.Count - 1], 0); 
+    } OP_CUR (statement)+ {
+        if (whiles.Count > 0) {
+            Emit("goto BEGIN_WHILE_" + whiles[whiles.Count - 1], 0);        
+            System.Console.WriteLine("\n    END_WHILE_" + whiles[whiles.Count - 1] + ":\n");
+            whiles.RemoveAt(whiles.Count - 1);
+        }        
+    } CL_CUR;
 
 st_break:
 	BREAK {
-        if (!inside_while) {
+        if (whiles.Count == 0) {
             Console.Error.WriteLine("# error: trying to use 'break' outside a loop.");         
             has_error = true;
+        } else {
+            Emit("goto END_WHILE_" +  whiles[whiles.Count - 1], 0);
         }
-        
-        Emit("goto END_WHILE_" +  while_break_continue, 0);
     };
 
 st_continue:
 	CONTINUE {
-        if (!inside_while) {
+        if (whiles.Count == 0) {
             Console.Error.WriteLine("# error: trying to use 'continue' outside a loop.");         
             has_error = true;
+        } else {
+            Emit("goto BEGIN_WHILE_" + whiles[whiles.Count - 1], 0);
         }
-
-        Emit("goto BEGIN_WHILE_" + while_break_continue, 0);
     };
 
 st_array_new:
@@ -391,7 +386,7 @@ st_attib:
             has_error = true;
         } else if (type == 'i') {
             if ($expression.type == type) {
-                Emit("istore " + index + "\n", -1);
+                Emit("istore " + index, -1);
             } else {
                 Console.Error.WriteLine("# error: '" + $NAME.text + "' is integer - line " + $NAME.line);
                 has_error = true;

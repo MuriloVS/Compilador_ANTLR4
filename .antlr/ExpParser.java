@@ -115,22 +115,16 @@ public class ExpParser extends Parser {
 	    int stack_curr = 0;
 	    
 	    int if_global = 0;
-	    // int has_else = 0;
-	    // int else_global = 0;
+	    List<int> ifs = new List<int>();
+	   
+	    int while_global = 0;  
+	    List<int> whiles = new List<int>();  
 
-	    int while_break_continue = 0;
-	    int while_global = 0;
-	    bool inside_while = false;
-
-	    int arguments_count = 0;
-	    int parameters_count = 0;
-
-	    List<int> else_local = new List<int>();
+	    int arguments_count = 0;   
 
 	    List<string> functions_list = new List<string>();
 
 	    bool has_error = false;
-
 
 	    void Emit(string s, int n)
 	    {
@@ -457,7 +451,7 @@ public class ExpParser extends Parser {
 			        {
 			            if (!used_table.Contains(s))
 			            {                
-			                Console.Error.WriteLine("ERROR - variable not used: '" + s + "'");             
+			                Console.Error.WriteLine("# error: variable not used: '" + s + "'");             
 			                has_error = true;
 			            }
 			        }        
@@ -674,7 +668,7 @@ public class ExpParser extends Parser {
 			            Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
 			            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
 			        } else {            
-			            Console.Error.WriteLine("\nERROR - Type error in 'e1'.\n");         
+			            Console.Error.WriteLine("# error: type error in 'e1' expression.\n");         
 			            has_error = true;
 			        }
 			    
@@ -697,7 +691,7 @@ public class ExpParser extends Parser {
 				        } else if (((St_printContext)_localctx).e2.type == 's') {
 				            Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
 				        } else {
-				            Console.Error.WriteLine("\nERROR - Type error in 'e2'.\n");         
+				            Console.Error.WriteLine("# error: type error in 'e2' expression\n");         
 				            has_error = true;
 				        }
 				    
@@ -862,17 +856,16 @@ public class ExpParser extends Parser {
 			{
 			setState(139);
 			match(WHILE);
-
-			        inside_while = true;
-			        int while_local = while_global;
-			        while_break_continue = while_local;
-			        while_global++;       
-			        System.Console.WriteLine("\n    BEGIN_WHILE_" + while_local + ":\n");
+			     
+			        whiles.Add(while_global);
+			        while_global++;    
+			        
+			        System.Console.WriteLine("\n    BEGIN_WHILE_" + whiles[whiles.Count - 1] + ":\n");        
 			    
 			setState(141);
 			comparison();
 
-			        Emit("END_WHILE_" + while_local, 0); 
+			        Emit("END_WHILE_" + whiles[whiles.Count - 1], 0); 
 			    
 			setState(143);
 			match(OP_CUR);
@@ -890,13 +883,15 @@ public class ExpParser extends Parser {
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PRINT) | (1L << IF) | (1L << WHILE) | (1L << BREAK) | (1L << CONTINUE) | (1L << NAME))) != 0) );
-			setState(149);
-			match(CL_CUR);
 
-			        Emit("goto BEGIN_WHILE_" + while_local, 0);
-			        System.Console.WriteLine("\n    END_WHILE_" + while_local + ":\n");
-			        inside_while = false;
+			        if (whiles.Count > 0) {
+			            Emit("goto BEGIN_WHILE_" + whiles[whiles.Count - 1], 0);        
+			            System.Console.WriteLine("\n    END_WHILE_" + whiles[whiles.Count - 1] + ":\n");
+			            whiles.RemoveAt(whiles.Count - 1);
+			        }        
 			    
+			setState(150);
+			match(CL_CUR);
 			}
 		}
 		catch (RecognitionException re) {
@@ -927,12 +922,12 @@ public class ExpParser extends Parser {
 			setState(152);
 			match(BREAK);
 
-			        if (!inside_while) {
+			        if (whiles.Count == 0) {
 			            Console.Error.WriteLine("# error: trying to use 'break' outside a loop.");         
 			            has_error = true;
+			        } else {
+			            Emit("goto END_WHILE_" +  whiles[whiles.Count - 1], 0);
 			        }
-			        
-			        Emit("goto END_WHILE_" +  while_break_continue, 0);
 			    
 			}
 		}
@@ -964,12 +959,12 @@ public class ExpParser extends Parser {
 			setState(155);
 			match(CONTINUE);
 
-			        if (!inside_while) {
+			        if (whiles.Count == 0) {
 			            Console.Error.WriteLine("# error: trying to use 'continue' outside a loop.");         
 			            has_error = true;
+			        } else {
+			            Emit("goto BEGIN_WHILE_" + whiles[whiles.Count - 1], 0);
 			        }
-
-			        Emit("goto BEGIN_WHILE_" + while_break_continue, 0);
 			    
 			}
 		}
@@ -1218,7 +1213,7 @@ public class ExpParser extends Parser {
 			            has_error = true;
 			        } else if (type == 'i') {
 			            if (((St_attibContext)_localctx).expression.type == type) {
-			                Emit("istore " + index + "\n", -1);
+			                Emit("istore " + index, -1);
 			            } else {
 			                Console.Error.WriteLine("# error: '" + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null) + "' is integer - line " + (((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getLine():0));
 			                has_error = true;
@@ -1909,7 +1904,7 @@ public class ExpParser extends Parser {
 		"\3\2\2\2\u008d\u008e\7\33\2\2\u008e\u008f\b\t\1\2\u008f\u0090\5\36\20"+
 		"\2\u0090\u0091\b\t\1\2\u0091\u0093\7\16\2\2\u0092\u0094\5\n\6\2\u0093"+
 		"\u0092\3\2\2\2\u0094\u0095\3\2\2\2\u0095\u0093\3\2\2\2\u0095\u0096\3\2"+
-		"\2\2\u0096\u0097\3\2\2\2\u0097\u0098\7\17\2\2\u0098\u0099\b\t\1\2\u0099"+
+		"\2\2\u0096\u0097\3\2\2\2\u0097\u0098\b\t\1\2\u0098\u0099\7\17\2\2\u0099"+
 		"\21\3\2\2\2\u009a\u009b\7\34\2\2\u009b\u009c\b\n\1\2\u009c\23\3\2\2\2"+
 		"\u009d\u009e\7\35\2\2\u009e\u009f\b\13\1\2\u009f\25\3\2\2\2\u00a0\u00a1"+
 		"\7%\2\2\u00a1\u00a2\7\f\2\2\u00a2\u00a3\7 \2\2\u00a3\u00a4\7!\2\2\u00a4"+

@@ -13,7 +13,7 @@
 # error-07-parameters
 
 # nome do arquivo testado deve ser mudado aqui
-Get-Content error-07-parameters.exp | .\Compiler  > Test.j -encoding utf8
+Get-Content test-16.exp | .\Compiler  > Test.j -encoding utf8
 
 if ( $? ) {     
     java -jar  jasmin-2.4.jar Test.j
