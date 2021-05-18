@@ -1,11 +1,5 @@
-def max(a, b) int {
-    c = a
-    if b > c {
-        c = b
-    }
-    return c
+a = 10
+if a == 10 {
+    a = 9    
+    print(a)
 }
-
-x = 8
-y = max(4, x)
-print(y)

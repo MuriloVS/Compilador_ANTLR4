@@ -117,10 +117,11 @@ public class ExpParser extends Parser {
 	    int stack_curr = 0;
 	    
 	    int if_global = 0;
-	    // List<int> ifs = new List<int>();
+	    List<int> ifElse_stack = new List<int>();
+	    List<int> usedIndex_table = new List<int>();
 	   
 	    int while_global = 0;  
-	    List<int> whiles = new List<int>();  
+	    List<int> while_stack = new List<int>();  
 
 	    int arguments_global = 0;
 	    //List<int>arguments_local = new List<int>();
@@ -128,7 +129,9 @@ public class ExpParser extends Parser {
 	    List<string> functions_list = new List<string>();
 
 	    bool has_error = false;
+	    int has_else = 0;
 	    bool has_return = false;
+	    bool has_ireturn = false;
 
 	    void Emit(string s, int n)
 	    {
@@ -285,7 +288,7 @@ public class ExpParser extends Parser {
 			        string func_name = (((FunctionContext)_localctx).NAME!=null?((FunctionContext)_localctx).NAME.getText():null) + "(" + params_modifier + ")" + return_modifier;
 
 			        if (functions_list.Contains(func_name)) {
-			            Console.Error.WriteLine("# error - function '" + (((FunctionContext)_localctx).NAME!=null?((FunctionContext)_localctx).NAME.getText():null) + "' already declared - line " + (((FunctionContext)_localctx).NAME!=null?((FunctionContext)_localctx).NAME.getLine():0));             
+			            Console.Error.WriteLine("# error: function '" + func_name + "' already declared - line " + (((FunctionContext)_localctx).NAME!=null?((FunctionContext)_localctx).NAME.getLine():0));             
 			            has_error = true;
 			        } else {
 			            functions_list.Add(func_name);
@@ -311,10 +314,10 @@ public class ExpParser extends Parser {
 			setState(70);
 			match(CL_CUR);
 
-			        // if (has_return) {
-			        //     Emit("ireturn", -1);
-			        //     has_return = false;
-			        // }
+			        if (has_return && !has_ireturn) {
+			            Console.Error.WriteLine("# error: missing return statement in returning function - line " + (((FunctionContext)_localctx).NAME!=null?((FunctionContext)_localctx).NAME.getLine():0));             
+			            has_error = true;
+			        }
 
 			        System.Console.WriteLine("\n    return");
 			        System.Console.WriteLine(".limit stack " + stack_max);
@@ -339,12 +342,15 @@ public class ExpParser extends Parser {
 			        }
 			        System.Console.WriteLine("\n");
 
+			        // fazendo a limpa
 			        params_modifier = "";
 			        symbol_table.Clear();
 			        type_table.Clear();
 			        used_table.Clear();
 			        stack_curr = 0;
 			        stack_max = 0;
+			        has_return = false;
+			        has_ireturn = false;
 			    
 			}
 		}
@@ -792,9 +798,10 @@ public class ExpParser extends Parser {
 			setState(123);
 			comparison();
 
-			        int if_local = if_global;
-			        if_global++;        
-			        Emit("NOT_IF_" + if_local, -2); 
+			        ifElse_stack.Add(if_global);
+			        if_global++;
+
+			        Emit("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1], -2);
 			    
 			setState(125);
 			match(OP_CUR);
@@ -814,17 +821,21 @@ public class ExpParser extends Parser {
 			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PRINT) | (1L << IF) | (1L << WHILE) | (1L << BREAK) | (1L << CONTINUE) | (1L << RETURN) | (1L << NAME))) != 0) );
 			setState(131);
 			match(CL_CUR);
-
-			        Emit("goto END_ELSE_" + if_local, 0);
-			        System.Console.WriteLine("NOT_IF_" + if_local + ":");
-			    
-			setState(142);
+			setState(143);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==ELSE) {
 				{
-				setState(133);
+				setState(132);
 				match(ELSE);
+
+				        Emit("goto END_ELSE_" + ifElse_stack[ifElse_stack.Count - 1], 0);
+				        System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+				        
+				        usedIndex_table.Add(ifElse_stack[ifElse_stack.Count - 1]);
+				        
+				        has_else++;
+				    
 				setState(134);
 				match(OP_CUR);
 				setState(136); 
@@ -843,12 +854,32 @@ public class ExpParser extends Parser {
 				} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PRINT) | (1L << IF) | (1L << WHILE) | (1L << BREAK) | (1L << CONTINUE) | (1L << RETURN) | (1L << NAME))) != 0) );
 				setState(140);
 				match(CL_CUR);
+
+				            System.Console.WriteLine("END_ELSE_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+				            has_else--;
+				        
 				}
 			}
 
-			       
-			        System.Console.WriteLine("END_ELSE_" + if_local + ":");
-			    
+
+			        // if (has_else > 0 && !usedIndex_table.Contains(ifElse_stack[ifElse_stack.Count - 1])) {
+			        //     System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+			        //     usedIndex_table.Add(ifElse_stack[ifElse_stack.Count - 1]);
+			        // } else if (!usedIndex_table.Contains(ifElse_stack[ifElse_stack.Count - 1])) {            
+			        //     System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+			        // }
+
+			        if (!usedIndex_table.Contains(ifElse_stack[ifElse_stack.Count - 1])) {
+			            if (has_else > 0 ){
+			                System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+			                usedIndex_table.Add(ifElse_stack[ifElse_stack.Count - 1]);
+			            } else {
+			                System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+			            }
+			        }
+			        
+			        ifElse_stack.RemoveAt(ifElse_stack.Count - 1);
+			     
 			}
 		}
 		catch (RecognitionException re) {
@@ -888,43 +919,43 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(146);
+			setState(147);
 			match(WHILE);
 			     
-			        whiles.Add(while_global);
+			        while_stack.Add(while_global);
 			        while_global++;    
 			        
-			        System.Console.WriteLine("\n    BEGIN_WHILE_" + whiles[whiles.Count - 1] + ":\n");        
+			        System.Console.WriteLine("\n    BEGIN_WHILE_" + while_stack[while_stack.Count - 1] + ":\n");        
 			    
-			setState(148);
+			setState(149);
 			comparison();
 
-			        Emit("END_WHILE_" + whiles[whiles.Count - 1], 0); 
+			        Emit("END_WHILE_" + while_stack[while_stack.Count - 1], 0); 
 			    
-			setState(150);
+			setState(151);
 			match(OP_CUR);
-			setState(152); 
+			setState(153); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(151);
+				setState(152);
 				statement();
 				}
 				}
-				setState(154); 
+				setState(155); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PRINT) | (1L << IF) | (1L << WHILE) | (1L << BREAK) | (1L << CONTINUE) | (1L << RETURN) | (1L << NAME))) != 0) );
 
-			        if (whiles.Count > 0) {
-			            Emit("goto BEGIN_WHILE_" + whiles[whiles.Count - 1], 0);        
-			            System.Console.WriteLine("\n    END_WHILE_" + whiles[whiles.Count - 1] + ":\n");
-			            whiles.RemoveAt(whiles.Count - 1);
+			        if (while_stack.Count > 0) {
+			            Emit("goto BEGIN_WHILE_" + while_stack[while_stack.Count - 1], 0);        
+			            System.Console.WriteLine("\n    END_WHILE_" + while_stack[while_stack.Count - 1] + ":\n");
+			            while_stack.RemoveAt(while_stack.Count - 1);
 			        }        
 			    
-			setState(157);
+			setState(158);
 			match(CL_CUR);
 			}
 		}
@@ -953,14 +984,14 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(159);
+			setState(160);
 			match(BREAK);
 
-			        if (whiles.Count == 0) {
-			            Console.Error.WriteLine("# error: trying to use 'break' outside a loop.");         
+			        if (while_stack.Count == 0) {
+			            Console.Error.WriteLine("# error: trying to use 'break' outside a loop");         
 			            has_error = true;
 			        } else {
-			            Emit("goto END_WHILE_" +  whiles[whiles.Count - 1], 0);
+			            Emit("goto END_WHILE_" +  while_stack[while_stack.Count - 1], 0);
 			        }
 			    
 			}
@@ -990,14 +1021,14 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(162);
+			setState(163);
 			match(CONTINUE);
 
-			        if (whiles.Count == 0) {
-			            Console.Error.WriteLine("# error: trying to use 'continue' outside a loop.");         
+			        if (while_stack.Count == 0) {
+			            Console.Error.WriteLine("# error: trying to use 'continue' outside a loop");         
 			            has_error = true;
 			        } else {
-			            Emit("goto BEGIN_WHILE_" + whiles[whiles.Count - 1], 0);
+			            Emit("goto BEGIN_WHILE_" + while_stack[while_stack.Count - 1], 0);
 			        }
 			    
 			}
@@ -1031,13 +1062,13 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(165);
-			((St_array_newContext)_localctx).NAME = match(NAME);
 			setState(166);
-			match(ATTRIB);
+			((St_array_newContext)_localctx).NAME = match(NAME);
 			setState(167);
-			match(OP_BRA);
+			match(ATTRIB);
 			setState(168);
+			match(OP_BRA);
+			setState(169);
 			match(CL_BRA);
 
 			        if (!symbol_table.Contains((((St_array_newContext)_localctx).NAME!=null?((St_array_newContext)_localctx).NAME.getText():null))) {
@@ -1090,7 +1121,7 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(171);
+			setState(172);
 			((St_array_pushContext)_localctx).NAME = match(NAME);
 			   
 			        if (!symbol_table.Contains((((St_array_pushContext)_localctx).NAME!=null?((St_array_pushContext)_localctx).NAME.getText():null))) {
@@ -1104,18 +1135,18 @@ public class ExpParser extends Parser {
 			        int index = symbol_table.IndexOf((((St_array_pushContext)_localctx).NAME!=null?((St_array_pushContext)_localctx).NAME.getText():null));                    
 			        Emit("aload " + index, 1);        
 			    
-			setState(173);
-			match(DOT);
 			setState(174);
-			match(PUSH);
+			match(DOT);
 			setState(175);
-			match(OP_PAR);
+			match(PUSH);
 			setState(176);
+			match(OP_PAR);
+			setState(177);
 			expression();
 			   
 			        Emit("invokevirtual Array/push(I)V\n", -2);        
 			    
-			setState(178);
+			setState(179);
 			match(CL_PAR);
 			}
 		}
@@ -1156,7 +1187,7 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(180);
+			setState(181);
 			((St_array_setContext)_localctx).NAME = match(NAME);
 
 			        if (!symbol_table.Contains((((St_array_setContext)_localctx).NAME!=null?((St_array_setContext)_localctx).NAME.getText():null))) {
@@ -1173,15 +1204,15 @@ public class ExpParser extends Parser {
 			            }
 			        }
 			    
-			setState(182);
-			match(OP_BRA);
 			setState(183);
-			((St_array_setContext)_localctx).e1 = expression();
+			match(OP_BRA);
 			setState(184);
-			match(CL_BRA);
+			((St_array_setContext)_localctx).e1 = expression();
 			setState(185);
-			match(ATTRIB);
+			match(CL_BRA);
 			setState(186);
+			match(ATTRIB);
+			setState(187);
 			((St_array_setContext)_localctx).e2 = expression();
 			              
 			        if (((St_array_setContext)_localctx).e1.type != 'i') {
@@ -1227,11 +1258,11 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(189);
-			((St_attibContext)_localctx).NAME = match(NAME);
 			setState(190);
-			match(ATTRIB);
+			((St_attibContext)_localctx).NAME = match(NAME);
 			setState(191);
+			match(ATTRIB);
+			setState(192);
 			((St_attibContext)_localctx).expression = expression();
 
 			        if (!symbol_table.Contains((((St_attibContext)_localctx).NAME!=null?((St_attibContext)_localctx).NAME.getText():null))) {
@@ -1306,9 +1337,9 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(194);
-			((ComparisonContext)_localctx).e1 = expression();
 			setState(195);
+			((ComparisonContext)_localctx).e1 = expression();
+			setState(196);
 			((ComparisonContext)_localctx).op = _input.LT(1);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << EQ) | (1L << NE) | (1L << GT) | (1L << GE) | (1L << LT) | (1L << LE))) != 0)) ) {
@@ -1319,7 +1350,7 @@ public class ExpParser extends Parser {
 				_errHandler.reportMatch(this);
 				consume();
 			}
-			setState(196);
+			setState(197);
 			((ComparisonContext)_localctx).e2 = expression();
 
 			        if (((ComparisonContext)_localctx).e1.type != 'i' || ((ComparisonContext)_localctx).e2.type  != 'i') {
@@ -1385,15 +1416,15 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(199);
+			setState(200);
 			((ExpressionContext)_localctx).t1 = term();
-			setState(206);
+			setState(207);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==PLUS || _la==MINUS) {
 				{
 				{
-				setState(200);
+				setState(201);
 				((ExpressionContext)_localctx).op = _input.LT(1);
 				_la = _input.LA(1);
 				if ( !(_la==PLUS || _la==MINUS) ) {
@@ -1404,7 +1435,7 @@ public class ExpParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(201);
+				setState(202);
 				((ExpressionContext)_localctx).t2 = term();
 
 				        if (((ExpressionContext)_localctx).t1.type != 'i' || ((ExpressionContext)_localctx).t2.type != 'i') {
@@ -1419,7 +1450,7 @@ public class ExpParser extends Parser {
 				    
 				}
 				}
-				setState(208);
+				setState(209);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1475,15 +1506,15 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(211);
+			setState(212);
 			((TermContext)_localctx).f1 = factor();
-			setState(218);
+			setState(219);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << TIMES) | (1L << OVER) | (1L << REM))) != 0)) {
 				{
 				{
-				setState(212);
+				setState(213);
 				((TermContext)_localctx).op = _input.LT(1);
 				_la = _input.LA(1);
 				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << TIMES) | (1L << OVER) | (1L << REM))) != 0)) ) {
@@ -1494,7 +1525,7 @@ public class ExpParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(213);
+				setState(214);
 				((TermContext)_localctx).f2 = factor();
 
 				        if (((TermContext)_localctx).f1.type != 'i' || ((TermContext)_localctx).f2.type != 'i') {
@@ -1511,7 +1542,7 @@ public class ExpParser extends Parser {
 				    
 				}
 				}
-				setState(220);
+				setState(221);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1565,13 +1596,13 @@ public class ExpParser extends Parser {
 		enterRule(_localctx, 34, RULE_factor);
 		int _la;
 		try {
-			setState(262);
+			setState(263);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(223);
+				setState(224);
 				((FactorContext)_localctx).NUMBER = match(NUMBER);
 
 				        Emit("ldc " + (((FactorContext)_localctx).NUMBER!=null?((FactorContext)_localctx).NUMBER.getText():null), 1);
@@ -1582,7 +1613,7 @@ public class ExpParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(225);
+				setState(226);
 				((FactorContext)_localctx).STRING = match(STRING);
 
 				        Emit("ldc " + (((FactorContext)_localctx).STRING!=null?((FactorContext)_localctx).STRING.getText():null), 1);
@@ -1593,11 +1624,11 @@ public class ExpParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(227);
-				match(OP_PAR);
 				setState(228);
-				((FactorContext)_localctx).expression = expression();
+				match(OP_PAR);
 				setState(229);
+				((FactorContext)_localctx).expression = expression();
+				setState(230);
 				match(CL_PAR);
 
 				        ((FactorContext)_localctx).type =  ((FactorContext)_localctx).expression.type;
@@ -1607,11 +1638,11 @@ public class ExpParser extends Parser {
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(232);
+				setState(233);
 				((FactorContext)_localctx).NAME = match(NAME);
 
 				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
-				            Console.Error.WriteLine("# error: variable not declared: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "'");         
+				            Console.Error.WriteLine("# error: variable not declared: '" + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "' - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));         
 				            has_error = true;
 				        } else {
 				            // vai auxiliar no controle das variáveis usadas        
@@ -1642,11 +1673,11 @@ public class ExpParser extends Parser {
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(234);
-				match(READ_INT);
 				setState(235);
-				match(OP_PAR);
+				match(READ_INT);
 				setState(236);
+				match(OP_PAR);
+				setState(237);
 				match(CL_PAR);
 
 				        Emit("invokestatic Runtime/readInt()I", 1);
@@ -1657,11 +1688,11 @@ public class ExpParser extends Parser {
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(238);
-				match(READ_STR);
 				setState(239);
-				match(OP_PAR);
+				match(READ_STR);
 				setState(240);
+				match(OP_PAR);
+				setState(241);
 				match(CL_PAR);
 
 				        Emit("invokestatic Runtime/readString()Ljava/lang/String;", 1);        
@@ -1672,7 +1703,7 @@ public class ExpParser extends Parser {
 			case 7:
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(242);
+				setState(243);
 				((FactorContext)_localctx).NAME = match(NAME);
 
 				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
@@ -1690,9 +1721,9 @@ public class ExpParser extends Parser {
 				            }
 				        }        
 				    
-				setState(244);
-				match(DOT);
 				setState(245);
+				match(DOT);
+				setState(246);
 				match(LENGTH);
 				       
 				        Emit("invokevirtual Array/length()I", 0);                
@@ -1703,7 +1734,7 @@ public class ExpParser extends Parser {
 			case 8:
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(247);
+				setState(248);
 				((FactorContext)_localctx).NAME = match(NAME);
 
 				        if (!symbol_table.Contains((((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null))) {
@@ -1720,11 +1751,11 @@ public class ExpParser extends Parser {
 				            }
 				        }
 				    
-				setState(249);
-				match(OP_BRA);
 				setState(250);
-				expression();
+				match(OP_BRA);
 				setState(251);
+				expression();
+				setState(252);
 				match(CL_BRA);
 				   
 				        Emit("invokevirtual Array/get(I)I", -1);        
@@ -1735,21 +1766,26 @@ public class ExpParser extends Parser {
 			case 9:
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(254);
-				((FactorContext)_localctx).NAME = match(NAME);
 				setState(255);
+				((FactorContext)_localctx).NAME = match(NAME);
+				setState(256);
 				match(OP_PAR);
-				setState(257);
+				setState(258);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << OP_PAR) | (1L << READ_INT) | (1L << READ_STR) | (1L << NUMBER) | (1L << NAME) | (1L << STRING))) != 0)) {
 					{
-					setState(256);
+					setState(257);
 					arguments();
 					}
 				}
 
-				       
+
+				        // if (!has_return) {
+				        //     Console.Error.WriteLine("# error: void function does not return a value - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				        //     Console.Error.WriteLine("oioioi");
+				        // }
+
 				        params_modifier = "";
 
 				        for (int i = 0; i < arguments_global; i++) {
@@ -1758,16 +1794,24 @@ public class ExpParser extends Parser {
 				        
 				        int aux = arguments_global;        
 				         
-				        string function_name = (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "(" + params_modifier + ")I";        
+				        string function_name = (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "(" + params_modifier + ")I";
+
+				        // vai auxiliar na verificação das funções sem retorno 
+				        string function_validation = (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getText():null) + "(" + params_modifier + ")V"; 
 				        
 				        arguments_global = 0;      
 				    
-				setState(260);
+				setState(261);
 				match(CL_PAR);
 				              
-				        if (!functions_list.Contains(function_name)) {            
-				            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
-				            has_error = true;
+				        if (!functions_list.Contains(function_name)) {    
+				            if (functions_list.Contains(function_validation)) {
+				                Console.Error.WriteLine("# error: void function does not return a value - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				                has_error = true;
+				            } else {
+				                Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + (((FactorContext)_localctx).NAME!=null?((FactorContext)_localctx).NAME.getLine():0));
+				                has_error = true;
+				            }            
 				        } else {
 				            Emit("invokestatic Test/" + function_name + "\n", -aux + 1);            
 				        }
@@ -1810,21 +1854,21 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(264);
-			((St_callContext)_localctx).NAME = match(NAME);
 			setState(265);
+			((St_callContext)_localctx).NAME = match(NAME);
+			setState(266);
 			match(OP_PAR);
-			setState(267);
+			setState(268);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << OP_PAR) | (1L << READ_INT) | (1L << READ_STR) | (1L << NUMBER) | (1L << NAME) | (1L << STRING))) != 0)) {
 				{
-				setState(266);
+				setState(267);
 				arguments();
 				}
 			}
 
-
+			             
 			        params_modifier = "";
 
 			        for (int i = 0; i < arguments_global; i++) {
@@ -1833,16 +1877,24 @@ public class ExpParser extends Parser {
 
 			        int aux = arguments_global;
 			        
-			        string function_name = (((St_callContext)_localctx).NAME!=null?((St_callContext)_localctx).NAME.getText():null) + "(" + params_modifier + ")V";    
+			        string function_name = (((St_callContext)_localctx).NAME!=null?((St_callContext)_localctx).NAME.getText():null) + "(" + params_modifier + ")V";
+
+			        // vai auxiliar na verificação das funções com retorno
+			        string function_validation = (((St_callContext)_localctx).NAME!=null?((St_callContext)_localctx).NAME.getText():null) + "(" + params_modifier + ")I";    
 
 			        arguments_global = 0;        
 			    
-			setState(270);
+			setState(271);
 			match(CL_PAR);
 
-			        if (!functions_list.Contains(function_name)) {            
-			            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + (((St_callContext)_localctx).NAME!=null?((St_callContext)_localctx).NAME.getLine():0));
-			            has_error = true;
+			        if (!functions_list.Contains(function_name)) { 
+			            if (functions_list.Contains(function_validation)) {
+			                Console.Error.WriteLine("# error: return value cannot be ignored - line " + (((St_callContext)_localctx).NAME!=null?((St_callContext)_localctx).NAME.getLine():0));
+			                has_error = true;    
+			            } else {
+			                Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + (((St_callContext)_localctx).NAME!=null?((St_callContext)_localctx).NAME.getLine():0));
+			                has_error = true;
+			            }
 			        } else {
 			            Emit("invokestatic Test/" + function_name + "\n", -aux);
 			        }
@@ -1886,7 +1938,7 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(273);
+			setState(274);
 			((ArgumentsContext)_localctx).e1 = expression();
 			 
 			        if (((ArgumentsContext)_localctx).e1.type != 'i') {
@@ -1899,15 +1951,15 @@ public class ExpParser extends Parser {
 			        }
 			        arguments_global++;
 			    
-			setState(281);
+			setState(282);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				setState(275);
-				match(COMMA);
 				setState(276);
+				match(COMMA);
+				setState(277);
 				((ArgumentsContext)_localctx).e2 = expression();
 				        
 				            if (((ArgumentsContext)_localctx).e2.type != 'i') {
@@ -1922,7 +1974,7 @@ public class ExpParser extends Parser {
 				        
 				}
 				}
-				setState(283);
+				setState(284);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1957,16 +2009,23 @@ public class ExpParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(284);
-			match(RETURN);
 			setState(285);
+			match(RETURN);
+			setState(286);
 			((St_returnContext)_localctx).e1 = expression();
 
-			        if (((St_returnContext)_localctx).e1.type != 'i') {
-			            Console.Error.WriteLine("# error: return value must be of integer type");
+			        if (!has_return) {
+			            Console.Error.WriteLine("# error: a void function does not return a value");
 			            has_error = true;
 			        } else {
-			            Emit("ireturn", 0); 
+			            has_ireturn = true; 
+
+			            if (((St_returnContext)_localctx).e1.type != 'i') {
+			                Console.Error.WriteLine("# error: return value must be of integer type");
+			                has_error = true;            
+			            } else {
+			                Emit("ireturn", 0);                
+			            }
 			        }
 			    
 			}
@@ -1983,7 +2042,7 @@ public class ExpParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3(\u0123\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3(\u0124\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\3\2\3\2\7\2/\n\2\f\2\16\2\62"+
@@ -1993,90 +2052,91 @@ public class ExpParser extends Parser {
 		"\6\3\6\3\6\3\6\3\6\3\6\5\6i\n\6\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3"+
 		"\7\7\7u\n\7\f\7\16\7x\13\7\3\7\3\7\3\7\3\b\3\b\3\b\3\b\3\b\6\b\u0082\n"+
 		"\b\r\b\16\b\u0083\3\b\3\b\3\b\3\b\3\b\6\b\u008b\n\b\r\b\16\b\u008c\3\b"+
-		"\3\b\5\b\u0091\n\b\3\b\3\b\3\t\3\t\3\t\3\t\3\t\3\t\6\t\u009b\n\t\r\t\16"+
-		"\t\u009c\3\t\3\t\3\t\3\n\3\n\3\n\3\13\3\13\3\13\3\f\3\f\3\f\3\f\3\f\3"+
-		"\f\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\16\3\16\3\16\3\16\3\16\3\16\3"+
-		"\16\3\16\3\16\3\17\3\17\3\17\3\17\3\17\3\20\3\20\3\20\3\20\3\20\3\21\3"+
-		"\21\3\21\3\21\3\21\7\21\u00cf\n\21\f\21\16\21\u00d2\13\21\3\21\3\21\3"+
-		"\22\3\22\3\22\3\22\3\22\7\22\u00db\n\22\f\22\16\22\u00de\13\22\3\22\3"+
-		"\22\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3"+
+		"\3\b\3\b\5\b\u0092\n\b\3\b\3\b\3\t\3\t\3\t\3\t\3\t\3\t\6\t\u009c\n\t\r"+
+		"\t\16\t\u009d\3\t\3\t\3\t\3\n\3\n\3\n\3\13\3\13\3\13\3\f\3\f\3\f\3\f\3"+
+		"\f\3\f\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\16\3\16\3\16\3\16\3\16\3"+
+		"\16\3\16\3\16\3\16\3\17\3\17\3\17\3\17\3\17\3\20\3\20\3\20\3\20\3\20\3"+
+		"\21\3\21\3\21\3\21\3\21\7\21\u00d0\n\21\f\21\16\21\u00d3\13\21\3\21\3"+
+		"\21\3\22\3\22\3\22\3\22\3\22\7\22\u00dc\n\22\f\22\16\22\u00df\13\22\3"+
+		"\22\3\22\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3"+
 		"\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3"+
-		"\23\3\23\3\23\3\23\3\23\3\23\3\23\5\23\u0104\n\23\3\23\3\23\3\23\5\23"+
-		"\u0109\n\23\3\24\3\24\3\24\5\24\u010e\n\24\3\24\3\24\3\24\3\24\3\25\3"+
-		"\25\3\25\3\25\3\25\3\25\7\25\u011a\n\25\f\25\16\25\u011d\13\25\3\26\3"+
-		"\26\3\26\3\26\3\26\2\2\27\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&"+
-		"(*\2\5\3\2\20\25\3\2\5\6\3\2\7\t\2\u012f\2,\3\2\2\2\4\65\3\2\2\2\6K\3"+
-		"\2\2\2\bU\3\2\2\2\nh\3\2\2\2\fj\3\2\2\2\16|\3\2\2\2\20\u0094\3\2\2\2\22"+
-		"\u00a1\3\2\2\2\24\u00a4\3\2\2\2\26\u00a7\3\2\2\2\30\u00ad\3\2\2\2\32\u00b6"+
-		"\3\2\2\2\34\u00bf\3\2\2\2\36\u00c4\3\2\2\2 \u00c9\3\2\2\2\"\u00d5\3\2"+
-		"\2\2$\u0108\3\2\2\2&\u010a\3\2\2\2(\u0113\3\2\2\2*\u011e\3\2\2\2,\60\b"+
-		"\2\1\2-/\5\4\3\2.-\3\2\2\2/\62\3\2\2\2\60.\3\2\2\2\60\61\3\2\2\2\61\63"+
-		"\3\2\2\2\62\60\3\2\2\2\63\64\5\b\5\2\64\3\3\2\2\2\65\66\7#\2\2\66\67\7"+
-		"\'\2\2\679\7\n\2\28:\5\6\4\298\3\2\2\29:\3\2\2\2:;\3\2\2\2;>\7\13\2\2"+
-		"<=\7$\2\2=?\b\3\1\2><\3\2\2\2>?\3\2\2\2?@\3\2\2\2@A\b\3\1\2AE\7\16\2\2"+
-		"BD\5\n\6\2CB\3\2\2\2DG\3\2\2\2EC\3\2\2\2EF\3\2\2\2FH\3\2\2\2GE\3\2\2\2"+
-		"HI\7\17\2\2IJ\b\3\1\2J\5\3\2\2\2KL\7\'\2\2LR\b\4\1\2MN\7\r\2\2NO\7\'\2"+
-		"\2OQ\b\4\1\2PM\3\2\2\2QT\3\2\2\2RP\3\2\2\2RS\3\2\2\2S\7\3\2\2\2TR\3\2"+
-		"\2\2UW\b\5\1\2VX\5\n\6\2WV\3\2\2\2XY\3\2\2\2YW\3\2\2\2YZ\3\2\2\2Z[\3\2"+
-		"\2\2[\\\b\5\1\2\\\t\3\2\2\2]i\5\f\7\2^i\5\34\17\2_i\5\16\b\2`i\5\20\t"+
-		"\2ai\5\22\n\2bi\5\24\13\2ci\5\26\f\2di\5\30\r\2ei\5\32\16\2fi\5&\24\2"+
-		"gi\5*\26\2h]\3\2\2\2h^\3\2\2\2h_\3\2\2\2h`\3\2\2\2ha\3\2\2\2hb\3\2\2\2"+
-		"hc\3\2\2\2hd\3\2\2\2he\3\2\2\2hf\3\2\2\2hg\3\2\2\2i\13\3\2\2\2jk\7\26"+
-		"\2\2kl\7\n\2\2lm\b\7\1\2mn\5 \21\2nv\b\7\1\2op\7\r\2\2pq\b\7\1\2qr\5 "+
-		"\21\2rs\b\7\1\2su\3\2\2\2to\3\2\2\2ux\3\2\2\2vt\3\2\2\2vw\3\2\2\2wy\3"+
-		"\2\2\2xv\3\2\2\2yz\7\13\2\2z{\b\7\1\2{\r\3\2\2\2|}\7\31\2\2}~\5\36\20"+
-		"\2~\177\b\b\1\2\177\u0081\7\16\2\2\u0080\u0082\5\n\6\2\u0081\u0080\3\2"+
-		"\2\2\u0082\u0083\3\2\2\2\u0083\u0081\3\2\2\2\u0083\u0084\3\2\2\2\u0084"+
-		"\u0085\3\2\2\2\u0085\u0086\7\17\2\2\u0086\u0090\b\b\1\2\u0087\u0088\7"+
-		"\32\2\2\u0088\u008a\7\16\2\2\u0089\u008b\5\n\6\2\u008a\u0089\3\2\2\2\u008b"+
+		"\23\3\23\3\23\3\23\3\23\3\23\3\23\3\23\5\23\u0105\n\23\3\23\3\23\3\23"+
+		"\5\23\u010a\n\23\3\24\3\24\3\24\5\24\u010f\n\24\3\24\3\24\3\24\3\24\3"+
+		"\25\3\25\3\25\3\25\3\25\3\25\7\25\u011b\n\25\f\25\16\25\u011e\13\25\3"+
+		"\26\3\26\3\26\3\26\3\26\2\2\27\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36"+
+		" \"$&(*\2\5\3\2\20\25\3\2\5\6\3\2\7\t\2\u0130\2,\3\2\2\2\4\65\3\2\2\2"+
+		"\6K\3\2\2\2\bU\3\2\2\2\nh\3\2\2\2\fj\3\2\2\2\16|\3\2\2\2\20\u0095\3\2"+
+		"\2\2\22\u00a2\3\2\2\2\24\u00a5\3\2\2\2\26\u00a8\3\2\2\2\30\u00ae\3\2\2"+
+		"\2\32\u00b7\3\2\2\2\34\u00c0\3\2\2\2\36\u00c5\3\2\2\2 \u00ca\3\2\2\2\""+
+		"\u00d6\3\2\2\2$\u0109\3\2\2\2&\u010b\3\2\2\2(\u0114\3\2\2\2*\u011f\3\2"+
+		"\2\2,\60\b\2\1\2-/\5\4\3\2.-\3\2\2\2/\62\3\2\2\2\60.\3\2\2\2\60\61\3\2"+
+		"\2\2\61\63\3\2\2\2\62\60\3\2\2\2\63\64\5\b\5\2\64\3\3\2\2\2\65\66\7#\2"+
+		"\2\66\67\7\'\2\2\679\7\n\2\28:\5\6\4\298\3\2\2\29:\3\2\2\2:;\3\2\2\2;"+
+		">\7\13\2\2<=\7$\2\2=?\b\3\1\2><\3\2\2\2>?\3\2\2\2?@\3\2\2\2@A\b\3\1\2"+
+		"AE\7\16\2\2BD\5\n\6\2CB\3\2\2\2DG\3\2\2\2EC\3\2\2\2EF\3\2\2\2FH\3\2\2"+
+		"\2GE\3\2\2\2HI\7\17\2\2IJ\b\3\1\2J\5\3\2\2\2KL\7\'\2\2LR\b\4\1\2MN\7\r"+
+		"\2\2NO\7\'\2\2OQ\b\4\1\2PM\3\2\2\2QT\3\2\2\2RP\3\2\2\2RS\3\2\2\2S\7\3"+
+		"\2\2\2TR\3\2\2\2UW\b\5\1\2VX\5\n\6\2WV\3\2\2\2XY\3\2\2\2YW\3\2\2\2YZ\3"+
+		"\2\2\2Z[\3\2\2\2[\\\b\5\1\2\\\t\3\2\2\2]i\5\f\7\2^i\5\34\17\2_i\5\16\b"+
+		"\2`i\5\20\t\2ai\5\22\n\2bi\5\24\13\2ci\5\26\f\2di\5\30\r\2ei\5\32\16\2"+
+		"fi\5&\24\2gi\5*\26\2h]\3\2\2\2h^\3\2\2\2h_\3\2\2\2h`\3\2\2\2ha\3\2\2\2"+
+		"hb\3\2\2\2hc\3\2\2\2hd\3\2\2\2he\3\2\2\2hf\3\2\2\2hg\3\2\2\2i\13\3\2\2"+
+		"\2jk\7\26\2\2kl\7\n\2\2lm\b\7\1\2mn\5 \21\2nv\b\7\1\2op\7\r\2\2pq\b\7"+
+		"\1\2qr\5 \21\2rs\b\7\1\2su\3\2\2\2to\3\2\2\2ux\3\2\2\2vt\3\2\2\2vw\3\2"+
+		"\2\2wy\3\2\2\2xv\3\2\2\2yz\7\13\2\2z{\b\7\1\2{\r\3\2\2\2|}\7\31\2\2}~"+
+		"\5\36\20\2~\177\b\b\1\2\177\u0081\7\16\2\2\u0080\u0082\5\n\6\2\u0081\u0080"+
+		"\3\2\2\2\u0082\u0083\3\2\2\2\u0083\u0081\3\2\2\2\u0083\u0084\3\2\2\2\u0084"+
+		"\u0085\3\2\2\2\u0085\u0091\7\17\2\2\u0086\u0087\7\32\2\2\u0087\u0088\b"+
+		"\b\1\2\u0088\u008a\7\16\2\2\u0089\u008b\5\n\6\2\u008a\u0089\3\2\2\2\u008b"+
 		"\u008c\3\2\2\2\u008c\u008a\3\2\2\2\u008c\u008d\3\2\2\2\u008d\u008e\3\2"+
-		"\2\2\u008e\u008f\7\17\2\2\u008f\u0091\3\2\2\2\u0090\u0087\3\2\2\2\u0090"+
-		"\u0091\3\2\2\2\u0091\u0092\3\2\2\2\u0092\u0093\b\b\1\2\u0093\17\3\2\2"+
-		"\2\u0094\u0095\7\33\2\2\u0095\u0096\b\t\1\2\u0096\u0097\5\36\20\2\u0097"+
-		"\u0098\b\t\1\2\u0098\u009a\7\16\2\2\u0099\u009b\5\n\6\2\u009a\u0099\3"+
-		"\2\2\2\u009b\u009c\3\2\2\2\u009c\u009a\3\2\2\2\u009c\u009d\3\2\2\2\u009d"+
-		"\u009e\3\2\2\2\u009e\u009f\b\t\1\2\u009f\u00a0\7\17\2\2\u00a0\21\3\2\2"+
-		"\2\u00a1\u00a2\7\34\2\2\u00a2\u00a3\b\n\1\2\u00a3\23\3\2\2\2\u00a4\u00a5"+
-		"\7\35\2\2\u00a5\u00a6\b\13\1\2\u00a6\25\3\2\2\2\u00a7\u00a8\7\'\2\2\u00a8"+
-		"\u00a9\7\f\2\2\u00a9\u00aa\7 \2\2\u00aa\u00ab\7!\2\2\u00ab\u00ac\b\f\1"+
-		"\2\u00ac\27\3\2\2\2\u00ad\u00ae\7\'\2\2\u00ae\u00af\b\r\1\2\u00af\u00b0"+
-		"\7\"\2\2\u00b0\u00b1\7\36\2\2\u00b1\u00b2\7\n\2\2\u00b2\u00b3\5 \21\2"+
-		"\u00b3\u00b4\b\r\1\2\u00b4\u00b5\7\13\2\2\u00b5\31\3\2\2\2\u00b6\u00b7"+
-		"\7\'\2\2\u00b7\u00b8\b\16\1\2\u00b8\u00b9\7 \2\2\u00b9\u00ba\5 \21\2\u00ba"+
-		"\u00bb\7!\2\2\u00bb\u00bc\7\f\2\2\u00bc\u00bd\5 \21\2\u00bd\u00be\b\16"+
-		"\1\2\u00be\33\3\2\2\2\u00bf\u00c0\7\'\2\2\u00c0\u00c1\7\f\2\2\u00c1\u00c2"+
-		"\5 \21\2\u00c2\u00c3\b\17\1\2\u00c3\35\3\2\2\2\u00c4\u00c5\5 \21\2\u00c5"+
-		"\u00c6\t\2\2\2\u00c6\u00c7\5 \21\2\u00c7\u00c8\b\20\1\2\u00c8\37\3\2\2"+
-		"\2\u00c9\u00d0\5\"\22\2\u00ca\u00cb\t\3\2\2\u00cb\u00cc\5\"\22\2\u00cc"+
-		"\u00cd\b\21\1\2\u00cd\u00cf\3\2\2\2\u00ce\u00ca\3\2\2\2\u00cf\u00d2\3"+
-		"\2\2\2\u00d0\u00ce\3\2\2\2\u00d0\u00d1\3\2\2\2\u00d1\u00d3\3\2\2\2\u00d2"+
-		"\u00d0\3\2\2\2\u00d3\u00d4\b\21\1\2\u00d4!\3\2\2\2\u00d5\u00dc\5$\23\2"+
-		"\u00d6\u00d7\t\4\2\2\u00d7\u00d8\5$\23\2\u00d8\u00d9\b\22\1\2\u00d9\u00db"+
-		"\3\2\2\2\u00da\u00d6\3\2\2\2\u00db\u00de\3\2\2\2\u00dc\u00da\3\2\2\2\u00dc"+
-		"\u00dd\3\2\2\2\u00dd\u00df\3\2\2\2\u00de\u00dc\3\2\2\2\u00df\u00e0\b\22"+
-		"\1\2\u00e0#\3\2\2\2\u00e1\u00e2\7&\2\2\u00e2\u0109\b\23\1\2\u00e3\u00e4"+
-		"\7(\2\2\u00e4\u0109\b\23\1\2\u00e5\u00e6\7\n\2\2\u00e6\u00e7\5 \21\2\u00e7"+
-		"\u00e8\7\13\2\2\u00e8\u00e9\b\23\1\2\u00e9\u0109\3\2\2\2\u00ea\u00eb\7"+
-		"\'\2\2\u00eb\u0109\b\23\1\2\u00ec\u00ed\7\27\2\2\u00ed\u00ee\7\n\2\2\u00ee"+
-		"\u00ef\7\13\2\2\u00ef\u0109\b\23\1\2\u00f0\u00f1\7\30\2\2\u00f1\u00f2"+
-		"\7\n\2\2\u00f2\u00f3\7\13\2\2\u00f3\u0109\b\23\1\2\u00f4\u00f5\7\'\2\2"+
-		"\u00f5\u00f6\b\23\1\2\u00f6\u00f7\7\"\2\2\u00f7\u00f8\7\37\2\2\u00f8\u0109"+
-		"\b\23\1\2\u00f9\u00fa\7\'\2\2\u00fa\u00fb\b\23\1\2\u00fb\u00fc\7 \2\2"+
-		"\u00fc\u00fd\5 \21\2\u00fd\u00fe\7!\2\2\u00fe\u00ff\b\23\1\2\u00ff\u0109"+
-		"\3\2\2\2\u0100\u0101\7\'\2\2\u0101\u0103\7\n\2\2\u0102\u0104\5(\25\2\u0103"+
-		"\u0102\3\2\2\2\u0103\u0104\3\2\2\2\u0104\u0105\3\2\2\2\u0105\u0106\b\23"+
-		"\1\2\u0106\u0107\7\13\2\2\u0107\u0109\b\23\1\2\u0108\u00e1\3\2\2\2\u0108"+
-		"\u00e3\3\2\2\2\u0108\u00e5\3\2\2\2\u0108\u00ea\3\2\2\2\u0108\u00ec\3\2"+
-		"\2\2\u0108\u00f0\3\2\2\2\u0108\u00f4\3\2\2\2\u0108\u00f9\3\2\2\2\u0108"+
-		"\u0100\3\2\2\2\u0109%\3\2\2\2\u010a\u010b\7\'\2\2\u010b\u010d\7\n\2\2"+
-		"\u010c\u010e\5(\25\2\u010d\u010c\3\2\2\2\u010d\u010e\3\2\2\2\u010e\u010f"+
-		"\3\2\2\2\u010f\u0110\b\24\1\2\u0110\u0111\7\13\2\2\u0111\u0112\b\24\1"+
-		"\2\u0112\'\3\2\2\2\u0113\u0114\5 \21\2\u0114\u011b\b\25\1\2\u0115\u0116"+
-		"\7\r\2\2\u0116\u0117\5 \21\2\u0117\u0118\b\25\1\2\u0118\u011a\3\2\2\2"+
-		"\u0119\u0115\3\2\2\2\u011a\u011d\3\2\2\2\u011b\u0119\3\2\2\2\u011b\u011c"+
-		"\3\2\2\2\u011c)\3\2\2\2\u011d\u011b\3\2\2\2\u011e\u011f\7%\2\2\u011f\u0120"+
-		"\5 \21\2\u0120\u0121\b\26\1\2\u0121+\3\2\2\2\24\609>ERYhv\u0083\u008c"+
-		"\u0090\u009c\u00d0\u00dc\u0103\u0108\u010d\u011b";
+		"\2\2\u008e\u008f\7\17\2\2\u008f\u0090\b\b\1\2\u0090\u0092\3\2\2\2\u0091"+
+		"\u0086\3\2\2\2\u0091\u0092\3\2\2\2\u0092\u0093\3\2\2\2\u0093\u0094\b\b"+
+		"\1\2\u0094\17\3\2\2\2\u0095\u0096\7\33\2\2\u0096\u0097\b\t\1\2\u0097\u0098"+
+		"\5\36\20\2\u0098\u0099\b\t\1\2\u0099\u009b\7\16\2\2\u009a\u009c\5\n\6"+
+		"\2\u009b\u009a\3\2\2\2\u009c\u009d\3\2\2\2\u009d\u009b\3\2\2\2\u009d\u009e"+
+		"\3\2\2\2\u009e\u009f\3\2\2\2\u009f\u00a0\b\t\1\2\u00a0\u00a1\7\17\2\2"+
+		"\u00a1\21\3\2\2\2\u00a2\u00a3\7\34\2\2\u00a3\u00a4\b\n\1\2\u00a4\23\3"+
+		"\2\2\2\u00a5\u00a6\7\35\2\2\u00a6\u00a7\b\13\1\2\u00a7\25\3\2\2\2\u00a8"+
+		"\u00a9\7\'\2\2\u00a9\u00aa\7\f\2\2\u00aa\u00ab\7 \2\2\u00ab\u00ac\7!\2"+
+		"\2\u00ac\u00ad\b\f\1\2\u00ad\27\3\2\2\2\u00ae\u00af\7\'\2\2\u00af\u00b0"+
+		"\b\r\1\2\u00b0\u00b1\7\"\2\2\u00b1\u00b2\7\36\2\2\u00b2\u00b3\7\n\2\2"+
+		"\u00b3\u00b4\5 \21\2\u00b4\u00b5\b\r\1\2\u00b5\u00b6\7\13\2\2\u00b6\31"+
+		"\3\2\2\2\u00b7\u00b8\7\'\2\2\u00b8\u00b9\b\16\1\2\u00b9\u00ba\7 \2\2\u00ba"+
+		"\u00bb\5 \21\2\u00bb\u00bc\7!\2\2\u00bc\u00bd\7\f\2\2\u00bd\u00be\5 \21"+
+		"\2\u00be\u00bf\b\16\1\2\u00bf\33\3\2\2\2\u00c0\u00c1\7\'\2\2\u00c1\u00c2"+
+		"\7\f\2\2\u00c2\u00c3\5 \21\2\u00c3\u00c4\b\17\1\2\u00c4\35\3\2\2\2\u00c5"+
+		"\u00c6\5 \21\2\u00c6\u00c7\t\2\2\2\u00c7\u00c8\5 \21\2\u00c8\u00c9\b\20"+
+		"\1\2\u00c9\37\3\2\2\2\u00ca\u00d1\5\"\22\2\u00cb\u00cc\t\3\2\2\u00cc\u00cd"+
+		"\5\"\22\2\u00cd\u00ce\b\21\1\2\u00ce\u00d0\3\2\2\2\u00cf\u00cb\3\2\2\2"+
+		"\u00d0\u00d3\3\2\2\2\u00d1\u00cf\3\2\2\2\u00d1\u00d2\3\2\2\2\u00d2\u00d4"+
+		"\3\2\2\2\u00d3\u00d1\3\2\2\2\u00d4\u00d5\b\21\1\2\u00d5!\3\2\2\2\u00d6"+
+		"\u00dd\5$\23\2\u00d7\u00d8\t\4\2\2\u00d8\u00d9\5$\23\2\u00d9\u00da\b\22"+
+		"\1\2\u00da\u00dc\3\2\2\2\u00db\u00d7\3\2\2\2\u00dc\u00df\3\2\2\2\u00dd"+
+		"\u00db\3\2\2\2\u00dd\u00de\3\2\2\2\u00de\u00e0\3\2\2\2\u00df\u00dd\3\2"+
+		"\2\2\u00e0\u00e1\b\22\1\2\u00e1#\3\2\2\2\u00e2\u00e3\7&\2\2\u00e3\u010a"+
+		"\b\23\1\2\u00e4\u00e5\7(\2\2\u00e5\u010a\b\23\1\2\u00e6\u00e7\7\n\2\2"+
+		"\u00e7\u00e8\5 \21\2\u00e8\u00e9\7\13\2\2\u00e9\u00ea\b\23\1\2\u00ea\u010a"+
+		"\3\2\2\2\u00eb\u00ec\7\'\2\2\u00ec\u010a\b\23\1\2\u00ed\u00ee\7\27\2\2"+
+		"\u00ee\u00ef\7\n\2\2\u00ef\u00f0\7\13\2\2\u00f0\u010a\b\23\1\2\u00f1\u00f2"+
+		"\7\30\2\2\u00f2\u00f3\7\n\2\2\u00f3\u00f4\7\13\2\2\u00f4\u010a\b\23\1"+
+		"\2\u00f5\u00f6\7\'\2\2\u00f6\u00f7\b\23\1\2\u00f7\u00f8\7\"\2\2\u00f8"+
+		"\u00f9\7\37\2\2\u00f9\u010a\b\23\1\2\u00fa\u00fb\7\'\2\2\u00fb\u00fc\b"+
+		"\23\1\2\u00fc\u00fd\7 \2\2\u00fd\u00fe\5 \21\2\u00fe\u00ff\7!\2\2\u00ff"+
+		"\u0100\b\23\1\2\u0100\u010a\3\2\2\2\u0101\u0102\7\'\2\2\u0102\u0104\7"+
+		"\n\2\2\u0103\u0105\5(\25\2\u0104\u0103\3\2\2\2\u0104\u0105\3\2\2\2\u0105"+
+		"\u0106\3\2\2\2\u0106\u0107\b\23\1\2\u0107\u0108\7\13\2\2\u0108\u010a\b"+
+		"\23\1\2\u0109\u00e2\3\2\2\2\u0109\u00e4\3\2\2\2\u0109\u00e6\3\2\2\2\u0109"+
+		"\u00eb\3\2\2\2\u0109\u00ed\3\2\2\2\u0109\u00f1\3\2\2\2\u0109\u00f5\3\2"+
+		"\2\2\u0109\u00fa\3\2\2\2\u0109\u0101\3\2\2\2\u010a%\3\2\2\2\u010b\u010c"+
+		"\7\'\2\2\u010c\u010e\7\n\2\2\u010d\u010f\5(\25\2\u010e\u010d\3\2\2\2\u010e"+
+		"\u010f\3\2\2\2\u010f\u0110\3\2\2\2\u0110\u0111\b\24\1\2\u0111\u0112\7"+
+		"\13\2\2\u0112\u0113\b\24\1\2\u0113\'\3\2\2\2\u0114\u0115\5 \21\2\u0115"+
+		"\u011c\b\25\1\2\u0116\u0117\7\r\2\2\u0117\u0118\5 \21\2\u0118\u0119\b"+
+		"\25\1\2\u0119\u011b\3\2\2\2\u011a\u0116\3\2\2\2\u011b\u011e\3\2\2\2\u011c"+
+		"\u011a\3\2\2\2\u011c\u011d\3\2\2\2\u011d)\3\2\2\2\u011e\u011c\3\2\2\2"+
+		"\u011f\u0120\7%\2\2\u0120\u0121\5 \21\2\u0121\u0122\b\26\1\2\u0122+\3"+
+		"\2\2\2\24\609>ERYhv\u0083\u008c\u0091\u009d\u00d1\u00dd\u0104\u0109\u010e"+
+		"\u011c";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

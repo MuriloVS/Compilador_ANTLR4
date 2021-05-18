@@ -8,12 +8,11 @@
     return
 .end method
 
-.method public static fw()I
+.method public static fw()V
 
-    ldc "ab"
 
     return
-.limit stack 1
+.limit stack 0
 .end method
 
 ; symbol_table: 
@@ -22,10 +21,9 @@
 
 .method public static fx(I)V
 
-    ldc 0
 
     return
-.limit stack 1
+.limit stack 0
 .limit locals 1
 .end method
 
@@ -33,19 +31,11 @@
 ; type_table: i 
 ; used_table: a 
 
-.method public static fy(II)I
-
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    iload 0
-    iload 1
-    iadd
-    invokevirtual java/io/PrintStream/print(I)V
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    invokevirtual java/io/PrintStream/println()V
+.method public static fy(II)V
 
 
     return
-.limit stack 3
+.limit stack 0
 .limit locals 2
 .end method
 
@@ -53,24 +43,42 @@
 ; type_table: i i 
 ; used_table: b c 
 
+.method public static fz(I)V
+
+
+    return
+.limit stack 0
+.limit locals 1
+.end method
+
+; symbol_table: d 
+; type_table: i 
+; used_table: d 
+
 .method public static main([Ljava/lang/String;)V
 
     ldc 1
-    istore 1
     ldc 1
     ldc 2
+    ldc 1
+    ldc 2
+    ldc 3
     ldc "ab"
-    astore 4
+    invokestatic Test/fx(I)V
 
     ldc 1
+    ldc "ab"
+    invokestatic Test/fy(II)V
+
+    ldc "ab"
     ldc 2
-    invokestatic Test/fy(II)I
+    invokestatic Test/fy(II)V
 
     return
-.limit stack 4
-.limit locals 7
+.limit stack 8
+.limit locals 8
 .end method
 
-; symbol_table: 1 e 1 1 f 1 1 
-; type_table: i i i i s i i 
-; used_table: 1 1 1 1 1 
+; symbol_table: 1 1 1 1 1 1 1 "ab" 
+; type_table: i i i i i i i i 
+; used_table: 1 1 1 1 1 1 1 "ab" 
