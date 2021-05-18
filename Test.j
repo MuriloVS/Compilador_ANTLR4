@@ -20,10 +20,9 @@
 ; type_table: 
 ; used_table: 
 
-.method public static fx(I)I
+.method public static fx(I)V
 
     ldc 0
-    ireturn
 
     return
 .limit stack 1
@@ -57,8 +56,6 @@
 .method public static main([Ljava/lang/String;)V
 
     ldc 1
-    invokestatic Test/fx(I)I
-
     istore 1
     ldc 1
     ldc 2

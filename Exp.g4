@@ -134,11 +134,6 @@ function:
             System.Console.WriteLine(".method public static " + func_name + "\n"); 
         }
     } OP_CUR (statement)* CL_CUR {
-        // if (has_return) {
-        //     Emit("ireturn", -1);
-        //     has_return = false;
-        // }
-
         System.Console.WriteLine("\n    return");
         System.Console.WriteLine(".limit stack " + stack_max);
 
@@ -168,6 +163,7 @@ function:
         used_table.Clear();
         stack_curr = 0;
         stack_max = 0;
+        has_return = false;
     };
 
 parameters:
@@ -637,10 +633,15 @@ arguments:
 
 st_return:
 	RETURN e1 = expression {
-        if ($e1.type != 'i') {
-            Console.Error.WriteLine("# error: return value must be of integer type");
+        if (!has_return) {
+            Console.Error.WriteLine("# error: a void function does not return a value");
             has_error = true;
         } else {
-            Emit("ireturn", 0); 
+            if ($e1.type != 'i') {
+                Console.Error.WriteLine("# error: return value must be of integer type");
+                has_error = true;
+            } else {
+                Emit("ireturn", 0); 
+            }
         }
     };

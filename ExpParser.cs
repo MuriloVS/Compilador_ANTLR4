@@ -308,11 +308,6 @@ public partial class ExpParser : Parser {
 			State = 70;
 			Match(CL_CUR);
 
-			        // if (has_return) {
-			        //     Emit("ireturn", -1);
-			        //     has_return = false;
-			        // }
-
 			        System.Console.WriteLine("\n    return");
 			        System.Console.WriteLine(".limit stack " + stack_max);
 
@@ -342,6 +337,7 @@ public partial class ExpParser : Parser {
 			        used_table.Clear();
 			        stack_curr = 0;
 			        stack_max = 0;
+			        has_return = false;
 			    
 			}
 		}
@@ -1994,11 +1990,16 @@ public partial class ExpParser : Parser {
 			State = 285;
 			_localctx.e1 = expression();
 
-			        if (_localctx.e1.type != 'i') {
-			            Console.Error.WriteLine("# error: return value must be of integer type");
+			        if (!has_return) {
+			            Console.Error.WriteLine("# error: a void function does not return a value");
 			            has_error = true;
 			        } else {
-			            Emit("ireturn", 0); 
+			            if (_localctx.e1.type != 'i') {
+			                Console.Error.WriteLine("# error: return value must be of integer type");
+			                has_error = true;
+			            } else {
+			                Emit("ireturn", 0); 
+			            }
 			        }
 			    
 			}
