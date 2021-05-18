@@ -15,22 +15,25 @@ grammar Exp;
     List<char> type_table = new List<char>();
     List<string> used_table = new List<string>();
 
-    string func_modifier = "";
+    string params_modifier = "";
+    string return_modifier = "";
 
     int stack_max = 0;
     int stack_curr = 0;
     
     int if_global = 0;
-    List<int> ifs = new List<int>();
+    // List<int> ifs = new List<int>();
    
     int while_global = 0;  
     List<int> whiles = new List<int>();  
 
-    int arguments_count = 0;   
+    int arguments_global = 0;
+    //List<int>arguments_local = new List<int>();
 
     List<string> functions_list = new List<string>();
 
     bool has_error = false;
+    bool has_return = false;
 
     void Emit(string s, int n)
     {
@@ -88,6 +91,8 @@ CL_BRA: ']';
 DOT: '.';
 
 DEF: 'def';
+INT: 'int';
+RETURN: 'return';
 
 NUMBER: '0' ..'9'+;
 NAME: 'a' ..'z'+;
@@ -108,23 +113,33 @@ program:
     } (function)* main;
 
 function:
-	DEF NAME OP_PAR (parameters)? {
+	DEF NAME OP_PAR (parameters)? CL_PAR (
+		INT {
+        has_return = true;
+    }
+	)? {
         for (int i = 0; i < symbol_table.Count; i++) {
-            func_modifier += "I";
+            params_modifier += "I";
         }
-        
-        string func_name = $NAME.text + "(" + func_modifier + ")V";
 
-        if (functions_list.Contains(func_name)) {                
+        return_modifier = has_return ? "I" : "V";
+        
+        string func_name = $NAME.text + "(" + params_modifier + ")" + return_modifier;
+
+        if (functions_list.Contains(func_name)) {
             Console.Error.WriteLine("# error - function '" + $NAME.text + "' already declared - line " + $NAME.line);             
             has_error = true;
-        } else {            
+        } else {
             functions_list.Add(func_name);
             System.Console.WriteLine(".method public static " + func_name + "\n"); 
-        }        
-    } CL_PAR OP_CUR (statement)* CL_CUR {
-        // limpar as tabelas aqui   
-        System.Console.WriteLine("    return");
+        }
+    } OP_CUR (statement)* CL_CUR {
+        // if (has_return) {
+        //     Emit("ireturn", -1);
+        //     has_return = false;
+        // }
+
+        System.Console.WriteLine("\n    return");
         System.Console.WriteLine(".limit stack " + stack_max);
 
         if (symbol_table.Count > 0) {
@@ -147,7 +162,7 @@ function:
         }
         System.Console.WriteLine("\n");
 
-        func_modifier = "";
+        params_modifier = "";
         symbol_table.Clear();
         type_table.Clear();
         used_table.Clear();
@@ -156,14 +171,14 @@ function:
     };
 
 parameters:
-	NAME {        
+	NAME {
         if (!symbol_table.Contains($NAME.text)) {
             symbol_table.Add($NAME.text);
             used_table.Add($NAME.text);
             type_table.Add('i');
         } else {
             Console.Error.WriteLine("# error: parameter names must be unique - line " + $NAME.line);    
-            has_error = true;         
+            has_error = true;
         }
     } (
 		COMMA NAME {
@@ -173,7 +188,7 @@ parameters:
             type_table.Add('i');
         } else {
             Console.Error.WriteLine("# error: parameter names must be unique - line " + $NAME.line); 
-            has_error = true;            
+            has_error = true;
         }
     }
 	)*;
@@ -185,18 +200,18 @@ main:
         foreach (string s in symbol_table)
         {
             if (!used_table.Contains(s))
-            {                
+            {
                 Console.Error.WriteLine("# error: variable not used: '" + s + "'");             
                 has_error = true;
             }
-        }        
+        }
 
         System.Console.WriteLine("    return");
         System.Console.WriteLine(".limit stack " + stack_max); 
 
         if (symbol_table.Count > 0) {
             System.Console.WriteLine(".limit locals " + symbol_table.Count);
-        }    
+        }
 
         System.Console.WriteLine(".end method");
         System.Console.Write("\n; symbol_table: ");
@@ -206,7 +221,7 @@ main:
         System.Console.Write("\n; type_table: ");
         foreach (char c in type_table) {
             System.Console.Write(c + " ");
-        }        
+        }
         System.Console.Write("\n; used_table: ");
         foreach (string s in used_table) {
             System.Console.Write(s + " ");
@@ -227,7 +242,8 @@ statement:
 	| st_array_new
 	| st_array_push
 	| st_array_set
-	| st_call;
+	| st_call
+	| st_return;
 
 st_print:
 	PRINT OP_PAR {
@@ -237,10 +253,10 @@ st_print:
             Emit("invokevirtual java/io/PrintStream/print(I)V", -2);
         } else if ($e1.type == 's') {
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", -2);        
-        } else if ($e1.type == 'a') {            
+        } else if ($e1.type == 'a') {
             Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
-        } else {            
+        } else {
             Console.Error.WriteLine("# error: type error in 'e1' expression.\n");         
             has_error = true;
         }
@@ -503,8 +519,6 @@ factor
                 has_error = true;
             }
         }
-
-        
     }
 	| READ_INT OP_PAR CL_PAR {
         Emit("invokestatic Runtime/readInt()I", 1);
@@ -550,23 +564,49 @@ factor
     } OP_BRA expression CL_BRA {   
         Emit("invokevirtual Array/get(I)I", -1);        
         $type = 'i';   
+    }
+	| NAME OP_PAR (arguments)? {       
+        params_modifier = "";
+
+        for (int i = 0; i < arguments_global; i++) {
+            params_modifier += "I";
+        }
+        
+        int aux = arguments_global;        
+         
+        string function_name = $NAME.text + "(" + params_modifier + ")I";        
+        
+        arguments_global = 0;      
+    } CL_PAR {              
+        if (!functions_list.Contains(function_name)) {            
+            Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + $NAME.line);
+            has_error = true;
+        } else {
+            Emit("invokestatic Test/" + function_name + "\n", -aux + 1);            
+        }
+        
+        $type = 'i';
     };
 
 st_call:
 	NAME OP_PAR (arguments)? {
-        for (int i = 0; i < arguments_count; i++) {
-            func_modifier += "I";
+        params_modifier = "";
+
+        for (int i = 0; i < arguments_global; i++) {
+            params_modifier += "I";
         }        
+
+        int aux = arguments_global;
         
-        string function_name = $NAME.text + "(" + func_modifier + ")V";
-        arguments_count = 0;
-        func_modifier = "";
+        string function_name = $NAME.text + "(" + params_modifier + ")V";    
+
+        arguments_global = 0;        
     } CL_PAR {
-        if (!functions_list.Contains(function_name)) {
+        if (!functions_list.Contains(function_name)) {            
             Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + $NAME.line);
             has_error = true;
         } else {
-            Emit("invokestatic Test/" + function_name + "\n", 0);
+            Emit("invokestatic Test/" + function_name + "\n", -aux);
         }
     };
 
@@ -580,7 +620,7 @@ arguments:
             used_table.Add($e1.text);
             type_table.Add('i');        
         }
-        arguments_count++;
+        arguments_global++;
     } (
 		COMMA e2 = expression {        
             if ($e2.type != 'i') {
@@ -591,6 +631,16 @@ arguments:
                 used_table.Add($e1.text);
                 type_table.Add('i');        
             }
-            arguments_count++;
+            arguments_global++;
         }
 	)*;
+
+st_return:
+	RETURN e1 = expression {
+        if ($e1.type != 'i') {
+            Console.Error.WriteLine("# error: return value must be of integer type");
+            has_error = true;
+        } else {
+            Emit("ireturn", 0); 
+        }
+    };
