@@ -15,9 +15,6 @@ grammar Exp;
     List<char> type_table = new List<char>();
     List<string> used_table = new List<string>();
 
-    string params_modifier = "";
-    string return_modifier = "";
-
     int stack_max = 0;
     int stack_curr = 0;
     
@@ -29,14 +26,20 @@ grammar Exp;
     List<int> while_stack = new List<int>();  
 
     int arguments_global = 0;
-    //List<int>arguments_local = new List<int>();
 
     List<string> functions_list = new List<string>();
-
-    bool has_error = false;
-    int has_else = 0;
+    List<string> function_name = new List<string>();
+    List<string> function_param = new List<string>();
+    List<string> function_return = new List<string>();
+    string params_modifier = "";
+    string return_modifier = "";
     bool has_return = false;
     bool has_ireturn = false;
+
+    bool has_error = false;
+
+    int has_else = 0;
+    int line_error = 0;
 
     void Emit(string s, int n)
     {
@@ -121,20 +124,23 @@ function:
         has_return = true;
     }
 	)? {
-        for (int i = 0; i < symbol_table.Count; i++) {
-            params_modifier += "I";
-        }
-
-        return_modifier = has_return ? "I" : "V";
-        
-        string func_name = $NAME.text + "(" + params_modifier + ")" + return_modifier;
-
-        if (functions_list.Contains(func_name)) {
-            Console.Error.WriteLine("# error: function '" + func_name + "' already declared - line " + $NAME.line);             
+        if (function_name.Contains($NAME.text)) {
+            Console.Error.WriteLine("# error: function '" + $NAME.text + "' already declared - line " + $NAME.line);
             has_error = true;
         } else {
-            functions_list.Add(func_name);
-            System.Console.WriteLine(".method public static " + func_name + "\n"); 
+            function_name.Add($NAME.text);
+
+            for (int i = 0; i < symbol_table.Count; i++) {
+                params_modifier += "I";
+            }
+            function_param.Add(params_modifier);
+
+            return_modifier = has_return ? "I" : "V";
+            function_return.Add(return_modifier);        
+        
+            string aux = $NAME.text + "(" + params_modifier + ")" + return_modifier;
+            functions_list.Add(aux);
+            System.Console.WriteLine(".method public static " + aux + "\n"); 
         }
     } OP_CUR (statement)* CL_CUR {
         if (has_return && !has_ireturn) {
@@ -263,7 +269,7 @@ st_print:
             Emit("invokevirtual Array/string()Ljava/lang/String;", 0);        
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n", 0);        
         } else {
-            Console.Error.WriteLine("# error: type error in 'e1' expression.\n");         
+            Console.Error.WriteLine("# error: type error in 'e1' expression - line " + $OP_PAR.line);         
             has_error = true;
         }
     } (
@@ -275,7 +281,7 @@ st_print:
         } else if ($e2.type == 's') {
             Emit("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V", 1);        
         } else {
-            Console.Error.WriteLine("# error: type error in 'e2' expression\n");         
+            Console.Error.WriteLine("# error: type error in 'e2' expression - line " + $COMMA.line);         
             has_error = true;
         }
     }
@@ -283,26 +289,6 @@ st_print:
         Emit("getstatic java/lang/System/out Ljava/io/PrintStream;", 1);
         Emit("invokevirtual java/io/PrintStream/println()V\n", -1);
     };
-
-/*st_if:
- IF comparison {
- int if_local = if_global;
- if_global++;
- Emit("NOT_IF_" + if_local, -2);
- }
- OP_CUR
- (statement)+ CL_CUR {
- Emit("goto END_ELSE_" + if_local, 0);
- System.Console.WriteLine("NOT_IF_" +
- if_local + ":");
- } (
- ELSE OP_CUR ( statement)+ CL_CUR
- )?
- {
- System.Console.WriteLine("END_ELSE_"
- + if_local + ":");
- };
- */
 
 st_if:
 	IF comparison {
@@ -313,59 +299,40 @@ st_if:
     } OP_CUR (statement)+ CL_CUR (
 		ELSE {
         Emit("goto END_ELSE_" + ifElse_stack[ifElse_stack.Count - 1], 0);
-        System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+        System.Console.WriteLine("\nNOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":\n");
         
         usedIndex_table.Add(ifElse_stack[ifElse_stack.Count - 1]);
         
         has_else++;
     } OP_CUR (statement)+ CL_CUR {
-            System.Console.WriteLine("END_ELSE_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+            System.Console.WriteLine("\nEND_ELSE_" + ifElse_stack[ifElse_stack.Count - 1] + ":\n");
             has_else--;
         }
 	)? {
-        // if (has_else > 0 && !usedIndex_table.Contains(ifElse_stack[ifElse_stack.Count - 1])) {
-        //     System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
-        //     usedIndex_table.Add(ifElse_stack[ifElse_stack.Count - 1]);
-        // } else if (!usedIndex_table.Contains(ifElse_stack[ifElse_stack.Count - 1])) {            
-        //     System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
-        // }
-
         if (!usedIndex_table.Contains(ifElse_stack[ifElse_stack.Count - 1])) {
             if (has_else > 0 ){
-                System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+                System.Console.WriteLine("\nNOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":\n");
                 usedIndex_table.Add(ifElse_stack[ifElse_stack.Count - 1]);
             } else {
-                System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":");
+                System.Console.WriteLine("\nNOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":\n");
             }
         }
         
         ifElse_stack.RemoveAt(ifElse_stack.Count - 1);
      };
 
-// st_if: IF comparison { ifElse_stack.Add(if_global); if_global++;
-
-// Emit("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1], -2); } OP_CUR (statement)+ ( CL_CUR ELSE {
-// has_else++;
-
-// Emit("goto END_ELSE_" + ifElse_stack[ifElse_stack.Count - 1], 0);
-// System.Console.WriteLine("NOT_IF_" + ifElse_stack[ifElse_stack.Count - 1] + ":"); } OP_CUR
-// (statement)+ { if (has_else > 0) { System.Console.WriteLine("END_ELSE_" +
-// ifElse_stack[ifElse_stack.Count - 1] + ":"); has_else--; } } CL_CUR )? CL_CUR {
-
-// ifElse_stack.RemoveAt(ifElse_stack.Count - 1); };
-
 st_while:
 	WHILE {     
         while_stack.Add(while_global);
         while_global++;    
         
-        System.Console.WriteLine("\n    BEGIN_WHILE_" + while_stack[while_stack.Count - 1] + ":\n");        
+        System.Console.WriteLine("\nBEGIN_WHILE_" + while_stack[while_stack.Count - 1] + ":\n");        
     } comparison {
-        Emit("END_WHILE_" + while_stack[while_stack.Count - 1], 0); 
+        System.Console.WriteLine("END_WHILE_" + while_stack[while_stack.Count - 1] + "\n");        
     } OP_CUR (statement)+ {
         if (while_stack.Count > 0) {
             Emit("goto BEGIN_WHILE_" + while_stack[while_stack.Count - 1], 0);        
-            System.Console.WriteLine("\n    END_WHILE_" + while_stack[while_stack.Count - 1] + ":\n");
+            System.Console.WriteLine("\nEND_WHILE_" + while_stack[while_stack.Count - 1] + ":\n");
             while_stack.RemoveAt(while_stack.Count - 1);
         }        
     } CL_CUR;
@@ -373,7 +340,7 @@ st_while:
 st_break:
 	BREAK {
         if (while_stack.Count == 0) {
-            Console.Error.WriteLine("# error: trying to use 'break' outside a loop");         
+            Console.Error.WriteLine("# error: trying to use 'break' outside a loop - line " + $BREAK.line);         
             has_error = true;
         } else {
             Emit("goto END_WHILE_" +  while_stack[while_stack.Count - 1], 0);
@@ -383,7 +350,7 @@ st_break:
 st_continue:
 	CONTINUE {
         if (while_stack.Count == 0) {
-            Console.Error.WriteLine("# error: trying to use 'continue' outside a loop");         
+            Console.Error.WriteLine("# error: trying to use 'continue' outside a loop - line " + $CONTINUE.line);         
             has_error = true;
         } else {
             Emit("goto BEGIN_WHILE_" + while_stack[while_stack.Count - 1], 0);
@@ -520,7 +487,7 @@ expression
         }        
     }
 	)* {
-        $type = $t1.type;
+        $type = $t1.type;        
     };
 
 term
@@ -548,13 +515,16 @@ factor
 	NUMBER {
         Emit("ldc " + $NUMBER.text, 1);
         $type = 'i';
+        line_error = $NUMBER.line;
     }
 	| STRING {
         Emit("ldc " + $STRING.text, 1);
         $type = 's';
+        line_error = $STRING.line;
     }
 	| OP_PAR expression CL_PAR {
         $type = $expression.type;
+        line_error = $OP_PAR.line;
     }
 	| NAME {
         if (!symbol_table.Contains($NAME.text)) {
@@ -629,76 +599,71 @@ factor
         Emit("invokevirtual Array/get(I)I", -1);        
         $type = 'i';   
     }
-	| NAME OP_PAR (arguments)? {
-        // if (!has_return) {
-        //     Console.Error.WriteLine("# error: void function does not return a value - line " + $NAME.line);
-        //     Console.Error.WriteLine("oioioi");
-        // }
-
+	| NAME OP_PAR (arguments)? {   
         params_modifier = "";
 
-        for (int i = 0; i < arguments_global; i++) {
-            params_modifier += "I";
-        }
-        
-        int aux = arguments_global;        
-         
-        string function_name = $NAME.text + "(" + params_modifier + ")I";
+        if (!function_name.Contains($NAME.text)) {
+            Console.Error.WriteLine("# error: function '" + $NAME.text + "' was never declared - line " + $NAME.line);
+            has_error = true;
+        } else {
+            int index = function_name.IndexOf($NAME.text);            
 
-        // vai auxiliar na verificação das funções sem retorno 
-        string function_validation = $NAME.text + "(" + params_modifier + ")V"; 
-        
-        arguments_global = 0;      
-    } CL_PAR {              
-        if (!functions_list.Contains(function_name)) {    
-            if (functions_list.Contains(function_validation)) {
-                Console.Error.WriteLine("# error: void function does not return a value - line " + $NAME.line);
+            for (int i = 0; i < arguments_global; i++) {
+                params_modifier += "I";
+            }
+
+            if (function_param[index] != params_modifier) {
+                Console.Error.WriteLine("# error: wrong number of arguments - line " + $NAME.line);               
                 has_error = true;
             } else {
-                Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + $NAME.line);
-                has_error = true;
-            }            
-        } else {
-            Emit("invokestatic Test/" + function_name + "\n", -aux + 1);            
+                if (function_return[index] != "I") {
+                    Console.Error.WriteLine("# error: void function does not return a value - line " + $NAME.line);                   
+                    has_error = true;
+                } else {
+                    string aux = $NAME.text + "(" + params_modifier + ")I";
+                    Emit("invokestatic Test/" + aux + "\n", -arguments_global + 1);
+                }
+            }
         }
-        
+        arguments_global = 0;      
         $type = 'i';
-    };
+    } CL_PAR;
 
 st_call:
-	NAME OP_PAR (arguments)? {             
+	NAME OP_PAR (arguments)? { 
         params_modifier = "";
 
-        for (int i = 0; i < arguments_global; i++) {
-            params_modifier += "I";
-        }        
+        if (!function_name.Contains($NAME.text)) {
+            Console.Error.WriteLine("# error: function '" + $NAME.text + "' was never declared - line " + $NAME.line);
+            has_error = true;
+        } else {
+            int index = function_name.IndexOf($NAME.text);            
 
-        int aux = arguments_global;
-        
-        string function_name = $NAME.text + "(" + params_modifier + ")V";
+            for (int i = 0; i < arguments_global; i++) {
+                params_modifier += "I";
+            }
 
-        // vai auxiliar na verificação das funções com retorno
-        string function_validation = $NAME.text + "(" + params_modifier + ")I";    
+            if (function_param[index] != params_modifier) {
+                Console.Error.WriteLine("# error: wrong number of arguments - line " + $NAME.line);               
+                has_error = true;
+            } else {
+                if (function_return[index] == "I") {
+                    Console.Error.WriteLine("# error: return value cannot be ignored - line " + $NAME.line);                   
+                    has_error = true;
+                } else {
+                    string aux = $NAME.text + "(" + params_modifier + ")V";
+                    Emit("invokestatic Test/" + aux + "\n", -arguments_global);
+                }
+            }
+        }
 
         arguments_global = 0;        
-    } CL_PAR {
-        if (!functions_list.Contains(function_name)) { 
-            if (functions_list.Contains(function_validation)) {
-                Console.Error.WriteLine("# error: return value cannot be ignored - line " + $NAME.line);
-                has_error = true;    
-            } else {
-                Console.Error.WriteLine("# error: function '" + function_name + "' was never declared or wrong number of arguments - line " + $NAME.line);
-                has_error = true;
-            }
-        } else {
-            Emit("invokestatic Test/" + function_name + "\n", -aux);
-        }
-    };
+    } CL_PAR;
 
 arguments:
 	e1 = expression { 
         if ($e1.type != 'i') {
-            Console.Error.WriteLine("# error: all arguments must be integer");
+            Console.Error.WriteLine("# error: all arguments must be integer - line " + line_error);
             has_error = true;
         } else {
             symbol_table.Add($e1.text);
@@ -709,7 +674,7 @@ arguments:
     } (
 		COMMA e2 = expression {        
             if ($e2.type != 'i') {
-                Console.Error.WriteLine("# error: all arguments must be integer");
+                Console.Error.WriteLine("# error: all arguments must be integer - line " + $COMMA.line);
                 has_error = true;
             } else {
                 symbol_table.Add($e1.text);
@@ -723,13 +688,13 @@ arguments:
 st_return:
 	RETURN e1 = expression {
         if (!has_return) {
-            Console.Error.WriteLine("# error: a void function does not return a value");
+            Console.Error.WriteLine("# error: a void function does not return a value - line " + $RETURN.line);
             has_error = true;
         } else {
             has_ireturn = true; 
 
             if ($e1.type != 'i') {
-                Console.Error.WriteLine("# error: return value must be of integer type");
+                Console.Error.WriteLine("# error: return value must be of integer type - line " + $RETURN.line);
                 has_error = true;            
             } else {
                 Emit("ireturn", 0);                

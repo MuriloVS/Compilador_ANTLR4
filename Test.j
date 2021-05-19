@@ -8,77 +8,49 @@
     return
 .end method
 
-.method public static fw()V
+.method public static factorial(I)I
 
+    iload 0
+    ldc 1
+    if_icmpgt NOT_IF_0
+    ldc 1
+    ireturn
 
-    return
-.limit stack 0
-.end method
+NOT_IF_0:
 
-; symbol_table: 
-; type_table: 
-; used_table: 
+    iload 0
+    iload 0
+    ldc 1
+    isub
+    invokestatic Test/factorial(I)I
 
-.method public static fx(I)V
-
-
-    return
-.limit stack 0
-.limit locals 1
-.end method
-
-; symbol_table: a 
-; type_table: i 
-; used_table: a 
-
-.method public static fy(II)V
-
+    imul
+    ireturn
 
     return
-.limit stack 0
+.limit stack 4
 .limit locals 2
 .end method
 
-; symbol_table: b c 
+; symbol_table: n n-1 
 ; type_table: i i 
-; used_table: b c 
-
-.method public static fz(I)V
-
-
-    return
-.limit stack 0
-.limit locals 1
-.end method
-
-; symbol_table: d 
-; type_table: i 
-; used_table: d 
+; used_table: n n-1 
 
 .method public static main([Ljava/lang/String;)V
 
-    ldc 1
-    ldc 1
-    ldc 2
-    ldc 1
-    ldc 2
-    ldc 3
-    ldc "ab"
-    invokestatic Test/fx(I)V
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    ldc 5
+    invokestatic Test/factorial(I)I
 
-    ldc 1
-    ldc "ab"
-    invokestatic Test/fy(II)V
-
-    ldc "ab"
-    ldc 2
-    invokestatic Test/fy(II)V
+    invokevirtual java/io/PrintStream/print(I)V
+    getstatic java/lang/System/out Ljava/io/PrintStream;
+    invokevirtual java/io/PrintStream/println()V
 
     return
-.limit stack 8
-.limit locals 8
+.limit stack 2
+.limit locals 1
 .end method
 
-; symbol_table: 1 1 1 1 1 1 1 "ab" 
-; type_table: i i i i i i i i 
-; used_table: 1 1 1 1 1 1 1 "ab" 
+; symbol_table: 5 
+; type_table: i 
+; used_table: 5 
